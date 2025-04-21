@@ -1,3 +1,5 @@
+import Base: show
+
 """
 `struct GenericStatementLine <: AbstractStatementLine`\n
 A data structure representing a generic (any operation type) statement line.
@@ -19,4 +21,16 @@ struct GenericStatementLine <: AbstractStatementLine
 end
 
 export GenericStatementLine
+
+function Base.show(io::IO, ::MIME"text/plain", gl::GenericStatementLine)
+    msg  = "StLn: "
+    msg *= join([
+        gl.HistoryTradesWsData,
+        gl.TransactionType,
+        gl.TransactionCoin,
+        gl.TransactionAmount,
+        gl.TransactionOutcome
+    ], "\n      ")
+    print(io, msg)
+end
 
