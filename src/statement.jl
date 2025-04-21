@@ -14,13 +14,13 @@ struct GenericStatementLine <: AbstractStatementLine
             HistoryTradesWsData, \
             TransactionType, \
             TransactionCoin, \
-            TransactionAmount \
+            TransactionAmount, \
             TransactionOutcome = s[1], s[2], s[3], join(s[4:5], ','), s[6]
         elseif length(s) == 5
             HistoryTradesWsData, \
             TransactionType, \
             TransactionCoin, \
-            TransactionAmount \
+            TransactionAmount, \
             TransactionOutcome = s
         end
     end
