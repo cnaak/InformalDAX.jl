@@ -9,10 +9,12 @@ struct GenericStatementLine <: AbstractStatementLine
     TransactionAmount::String
     TransactionOutcome::String
     GenericStatementLine(RawStatementLine::String) = begin
-        s = split(RawStatementLine, ',')
-        return length(s) == 6 ?
-            new(s[1], s[2], s[3], join(s[4:5], ','), s[6]) :
-            new(s...)
+        noCGr(lab::String) = raw"(?<" * lab * raw">[^,]+)"
+        noQGr(lab::String) = raw""""?(?<""" * lab * raw""">[^"]+)"?"""
+        tmp = join([noCGr("dat"), noCGr("typ"), noCGr("coi"), noQGr("amt"), noCGr("out")], ",")
+        rex = Regex(join(["^", tmp, "\$"]))
+        m = match(rex, RawStatementLine)
+        new(m[:dat], m[:typ], m[:coi], m[:amt], m[:out])
     end
 end
 
