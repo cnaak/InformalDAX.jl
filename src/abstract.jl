@@ -1,33 +1,33 @@
-# Top-Level InformalDAX supertype
+# Top-Level Informal_DAX supertype
 # -------------------------------
 
 """
-`abstract type InformalDAX <: Any end`\n
-Top-level InformalDAX supertype.
+`abstract type Informal_DAX <: Any end`\n
+Top-level Informal_DAX supertype.
 """
-abstract type InformalDAX <: Any end
+abstract type Informal_DAX <: Any end
 
 
 # Second-level abstract types
 # ---------------------------
 
 """
-`abstract type AbstractStatement <: InformalDAX end`\n
+`abstract type AbstractStatement <: Informal_DAX end`\n
 Second-level Statement abstract supertype.
 """
-abstract type AbstractStatement <: InformalDAX end
+abstract type AbstractStatement <: Informal_DAX end
 
 """
-`abstract type AbstractOperation <: InformalDAX end`\n
+`abstract type AbstractOperation <: Informal_DAX end`\n
 Second-level Operation abstract supertype.
 """
-abstract type AbstractOperation <: InformalDAX end
+abstract type AbstractOperation <: Informal_DAX end
 
 """
-`abstract type AbstractMultiBalance <: InformalDAX end`\n
+`abstract type AbstractMultiBalance <: Informal_DAX end`\n
 Second-level MultiBalance abstract supertype.
 """
-abstract type AbstractMultiBalance <: InformalDAX end
+abstract type AbstractMultiBalance <: Informal_DAX end
 
 
 # Third-level abstract types
