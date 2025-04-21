@@ -1,5 +1,11 @@
+# Module
 module InformalDAX
 
-# Write your package code here.
+# Imports
+# using statements
 
+# Includes - abstract supertypes
+include("abstract.jl")
+
+# Module
 end
