@@ -61,10 +61,11 @@ export SingleBalance
 
 function Base.show(io::IO, ::MIME"text/plain", x::SingleBalance)
     if x.BAL[1][1] in Currencies.allsymbols()
-        print(@sprintf("%20.2f %s (%20.2f %s)",  x.BAL[2][1], x.BAL[1][1], x.BAL[2][2], x.BAL[1][2]))
+        print(@sprintf("%20.*f %s ", Currencies.unit(x.BAL[1][1]), x.BAL[2][1], x.BAL[1][1]))
     else
-        print(@sprintf("%20.10f %s (%20.2f %s)", x.BAL[2][1], x.BAL[1][1], x.BAL[2][2], x.BAL[1][2]))
+        print(@sprintf("%20.10f %s ", x.BAL[2][1], x.BAL[1][1]))
     end
+    print(@sprintf("(%20.*f %s)", Currencies.unit(x.BAL[1][2]), x.BAL[2][2], x.BAL[1][2]))
 end
 
 # Addition merges both CRYPTO and FIAT balances, thus, it
@@ -78,7 +79,7 @@ function +(x::SingleBalance, y::SingleBalance)
     )
 end
 
-function +(x::SingleBalance, y::NTuple{2,Union{UFD,SFD,Rational{<:Unsigned},Rational{<:Signed}}})
+function +(x::SingleBalance, y::NTuple{2,INPUTS})
     x + SingleBalance(x.BAL[1]..., y)
 end
 
@@ -96,8 +97,8 @@ function -(x::SingleBalance, y::SingleBalance)
     )
 end
 
-function -(x::SingleBalance, y::Union{UFD,SFD,Rational{<:Unsigned},Rational{<:Signed}})
-    x - SingleBalance( x.BAL[1]..., (y, Zero(UFD)) )
+function -(x::SingleBalance, y::INPUTS)
+    x - SingleBalance(x.BAL[1]..., (y, x.BAL[2][2]))
 end
 
 
