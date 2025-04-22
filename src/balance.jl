@@ -29,43 +29,59 @@ Rolling, single-currency balance.
 struct SingleBalance <: AbstractBalance
     BAL::Pair{NTuple{2, Symbol}, NTuple{2, UFD}}
     # Inner (validating) constructors
-    function SingleBalance(cur::Symbol)
-        new(cur => (zero(UFD), zero(UFD)), fia)
+    function SingleBalance(cur::Symbol, fia::Symbol)
+        @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
+        new((cur, fia) => (zero(UFD), zero(UFD)))
     end
     function SingleBalance(
-        cur::Symbol,
-        bal::NTuple{2, Union{UFD,SFD,Rational{<:Unsigned},Rational{<:Signed}}},
-        fia::Bool = false)
-        new(cur => (UFD(SFD(bal[1])), UFD(SFD(bal[2]))), fia)
+        cur::Symbol, fia::Symbol
+        bal::NTuple{2, Union{UFD,SFD,Rational{<:Unsigned},Rational{<:Signed}}})
+        @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
+        new((cur, fia) => (UFD(SFD(bal[1])), UFD(SFD(bal[2]))))
     end
 end
 
 # Outer constructors
-SingleBalance(that::SingleBalance) = SingleBalance(that.BAL, that.FIA)
+SingleBalance(that::SingleBalance) = SingleBalance(that.BAL[1][1], that.BAL[1][2], that.BAL[2])
 
 export SingleBalance
 
 function Base.show(io::IO, ::MIME"text/plain", x::SingleBalance)
-    WBOLD = Crayon(foreground = :white, bold = true, background = :dark_gray)
-    FAINT = Crayon(foreground = :light_gray, bold = false, background = :default)
-    RESET = Crayon(reset = true)
-    print(WBOLD, string(x.BAL[1]) * ":")
-    if x.FIA
-        print(FAINT, @sprintf(" %20.2f (%20.2f %s)",  x.BAL[2][1]))
+    if x.BAL[1][1] in Currencies.allsymbols()
+        print(@sprintf("%20.2f %s (%20.2f %s)",  x.BAL[2][1], x.BAL[1][1], x.BAL[2][2], x.BAL[1][2]))
     else
-        print(FAINT, @sprintf(" %20.10f", x.BAL[2]), RESET)
+        print(@sprintf("%20.10f %s (%20.2f %s)", x.BAL[2][1], x.BAL[1][1], x.BAL[2][2], x.BAL[1][2]))
     end
 end
 
-+(this::SingleBalance, that::Tuple{UFD,UFD}) = this[1] + that[1], this[2] + that[2]
-
-function -(this::Tuple{UFD,UFD}, that::UFD)
-    @assert(this[1] >= that, "Can't take more that one has!")
-    ret = this[1] - that
-    rat = ret / this[1]
-    return ret, UFD(rat * this[2])
+# Addition merges both CRYPTO and FIAT balances, thus, it
+#  (i) preserves FIAT spent on the partial purchases
+# (ii) most likely changes the effective exchange rate
+function +(x::SingleBalance, y::SingleBalance)
+    @assert(x.BAL[1] == y.BAL[1], "Can't add different currency pairs!")
+    SingleBalance(
+        x.BAL[1]...,
+        (x.BAL[2][1] + y.BAL[2][1], x.BAL[2][2] + y.BAL[2][2])
+    )
 end
 
+# Subtractions must ignore the subtracting operand's FIAT value, that is meaningless, thus, it
+#  (i) must make additional checks;
+# (ii) must preserve the first operand's FIAT-to-CRYPTO ratio!
+function -(x::SingleBalance, y::SingleBalance)
+    @assert(x.BAL[1][1] == y.BAL[1][1], "Can't sub different currencies!")
+    @assert(x.BAL[2][1] >= y.BAL[2][1], "Can't take more than it has!")
+    nwBal = x.BAL[2][1] - y.BAL[2][1]
+    ratio = nwBAL / x.BAL[2][1]
+    SingleBalance(
+        x.BAL[1]...,
+        (nwBal, ratio * x.BAL[2][2])
+    )
+end
+
+function -(x::SingleBalance, y::Union{UFD,SFD,Rational{<:Unsigned},Rational{<:Signed}})
+    x - SingleBalance( x.BAL[1]..., (y, Zero(UFD)) )
+end
 
 
 #--------------------------------------------------------------------------------------------------#
