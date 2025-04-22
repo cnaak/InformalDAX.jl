@@ -199,7 +199,11 @@ function +(x::MultiFTBalance, y::SingleFTBalance)
     end
 end
 
++(y::SingleFTBalance, x::MultiFTBalance) = +(x, y)
 
+function +(x::MultiFTBalance, y::MultiFTBalance)
+    reduce(+, vcat(x, [SingleFTBalance(i) for i in y.DAT]...))
+end
 
 
 
