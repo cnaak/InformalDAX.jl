@@ -185,9 +185,15 @@ end
 
 function +(x::MultiFTBalance, y::SingleFTBalance)
     𝑘 = y.DAT[1]
-    if 𝑘 in x.DAT
-        𝑥 = SingleFTBalance(𝑘 => x.DAT[𝑘]) + y
-        MultiFTBalance(𝑥, y)
+    if 𝑘 in keys(x.DAT)
+        singles = [ SingleFTBalance(i) for i in x.DAT ]
+        for i in 1:length(singles)
+            if 𝑘 == singles[i].DAT[1]
+                singles[i] += y
+                break
+            end
+        end
+        MultiFTBalance(singles...)
     else
         MultiFTBalance(x, y)
     end
