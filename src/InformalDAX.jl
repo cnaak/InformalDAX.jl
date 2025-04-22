@@ -4,6 +4,7 @@ module InformalDAX
 # Imports
 using Printf
 using Crayons
+using FixedPointDecimals
 using Dates
 
 # Includes - abstract supertypes
