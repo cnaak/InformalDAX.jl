@@ -187,8 +187,9 @@ function +(x::MultiFTBalance, y::SingleFTBalance)
     𝑘 = y.DAT[1]
     if 𝑘 in x.DAT
         𝑥 = SingleFTBalance(𝑘 => x.DAT[𝑘]) + y
-        
+        MultiFTBalance(𝑥, y)
     else
+        MultiFTBalance(x, y)
     end
 end
 
