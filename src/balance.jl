@@ -144,9 +144,9 @@ struct MultiFTBalance <: AbstractBalance
     function MultiFTBalance(sgl::SingleFTBalance...)
         𝑝 = [ i.DAT for i in sgl ]
         𝑘 = [ i[1] for i in 𝑝 ]
-        @assert(len(sgl) == len(Set(sgl)), "Repeated keys for constructor!")
+        @assert(length(𝑘) == length(Set(𝑘)), "Repeated keys for constructor!")
         𝑓 = [ i[2] for i in 𝑘 ]
-        @assert(len(Set(𝑓)) == 1, "Multiple tracking fiats!")
+        @assert(length(Set(𝑓)) == 1, "Multiple tracking fiats!")
         new(Dict(𝑝))
     end
     # Mixed-type arguments
@@ -155,17 +155,25 @@ struct MultiFTBalance <: AbstractBalance
     end
     function MultiFTBalance(mul::MultiFTBalance, sgl::SingleFTBalance)
         @assert(!(sgl.DAT[1] in keys(mul.DAT)), "Repeated keys for constructor!")
+        𝑓 = [ i[2] for i in vcat(keys(mul.DAT)..., sgl.DAT[1]) ]
+        @assert(length(Set(𝑓)) == 1, "Multiple tracking fiats!")
+        new(Dict([mul.DAT..., sgl.DAT]))
+    end
+    function MultiFTBalance(mul::MultiFTBalance, sgl::SingleFTBalance...)
+        𝑝 = vcat(mul.DAT..., [ i.DAT for i in sgl ]...)
+        𝑘 = [ i[1] for i in 𝑝 ]
+        @assert(length(𝑘) == length(Set(𝑘)), "Repeated keys for constructor!")
         𝑓 = [ i[2] for i in 𝑘 ]
-        @assert(len(Set([𝑓..., sgl.DAT[1][2]])) == 1, "Multiple tracking fiats!")
-        new(mul.DAT)
+        @assert(length(Set(𝑓)) == 1, "Multiple tracking fiats!")
+        new(Dict(𝑝))
     end
 end
 
 export MultiFTBalance
 
-function Base.show(io::IO, M::MIME"text/plain", x::MultiFTBalance)
+function Base.show(io::IO, ::MIME"text/plain", x::MultiFTBalance)
     for i in sort([ keys(x.DAT)... ])
-        Base.show(io, M, SingleFTBalance(i))
+        Base.show(io, "text/plain", SingleFTBalance(i => x.DAT[i]))
         print("\n")
     end
 end
