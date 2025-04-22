@@ -19,6 +19,13 @@ export UFD, SFD
 
 
 #--------------------------------------------------------------------------------------------------#
+#                                        Minimal Currencies                                        #
+#--------------------------------------------------------------------------------------------------#
+
+
+const validFiats = (:BRL, :USD, :EUR)
+
+#--------------------------------------------------------------------------------------------------#
 #                                Auxiliar, Single-Currency Balance                                 #
 #--------------------------------------------------------------------------------------------------#
 
@@ -27,20 +34,21 @@ export UFD, SFD
 Rolling, single-currency balance.
 """
 struct SingleBalance <: AbstractBalance
-    BAL::Pair{Symbol,Tuple{UFD, UFD}}
-    FIA::Bool
-    function SingleBalance(cur::Symbol, fia::Bool = false)
+    BAL::Pair{NTuple{2, Symbol}, NTuple{2, UFD}}
+    # Inner (validating) constructors
+    function SingleBalance(cur::Symbol)
         new(cur => (zero(UFD), zero(UFD)), fia)
     end
-    function SingleBalance(cur::Symbol, BAL::Tuple{UFD, UFD}, fia::Bool = false)
-        for indx in 1:2
-            @assert(BAL[indx] < typemax(FixedDecimal{Int64,10}), "Overflow")
-        end
-        new((cur => BAL))
+    function SingleBalance(
+        cur::Symbol,
+        bal::NTuple{2, Union{UFD,SFD,Rational{<:Unsigned},Rational{<:Signed}}},
+        fia::Bool = false)
+        new(cur => (UFD(SFD(bal[1])), UFD(SFD(bal[2]))), fia)
     end
 end
 
-SingleBalance(that::SingleBalance) = SingleBalance(that.BAL)
+# Outer constructors
+SingleBalance(that::SingleBalance) = SingleBalance(that.BAL, that.FIA)
 
 export SingleBalance
 
@@ -49,7 +57,11 @@ function Base.show(io::IO, ::MIME"text/plain", x::SingleBalance)
     FAINT = Crayon(foreground = :light_gray, bold = false, background = :default)
     RESET = Crayon(reset = true)
     print(WBOLD, string(x.BAL[1]) * ":")
-    print(FAINT, @sprintf(" %20.10f", x.BAL[2]), RESET)
+    if x.FIA
+        print(FAINT, @sprintf(" %20.2f (%20.2f %s)",  x.BAL[2][1]))
+    else
+        print(FAINT, @sprintf(" %20.10f", x.BAL[2]), RESET)
+    end
 end
 
 +(this::SingleBalance, that::Tuple{UFD,UFD}) = this[1] + that[1], this[2] + that[2]
