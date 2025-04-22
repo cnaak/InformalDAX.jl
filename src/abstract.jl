@@ -24,10 +24,10 @@ Second-level Operation abstract supertype.
 abstract type AbstractOperation <: Informal_DAX end
 
 """
-`abstract type AbstractMultiBalance <: Informal_DAX end`\n
-Second-level MultiBalance abstract supertype.
+`abstract type AbstractBalance <: Informal_DAX end`\n
+Second-level Balance abstract supertype.
 """
-abstract type AbstractMultiBalance <: Informal_DAX end
+abstract type AbstractBalance <: Informal_DAX end
 
 
 # Third-level abstract types
