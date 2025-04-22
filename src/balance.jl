@@ -1,4 +1,9 @@
+#==================================================================================================#
+#                                      FIAT-Tracking Balances                                      #
+#==================================================================================================#
+
 import Base: show, +, -
+
 
 #--------------------------------------------------------------------------------------------------#
 #                                  FixedPoint number for finances                                  #
@@ -15,7 +20,9 @@ UFD = FixedDecimal{UInt64,10}   # from          0.0000000000
                                 # upto  922337203.6854775807
                                 # upto 1844674407.3709551615 (not meant to be used for compat)
 
-export UFD, SFD
+INPUTS = Union{UFD, SFD, Rational, Integer}
+
+export UFD, SFD, INPUTS
 
 
 #--------------------------------------------------------------------------------------------------#
@@ -29,13 +36,19 @@ Rolling, single-currency balance.
 struct SingleBalance <: AbstractBalance
     BAL::Pair{NTuple{2, Symbol}, NTuple{2, UFD}}
     # Inner (validating) constructors
+    function SingleBalance(fia::Symbol)
+        @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
+        new((fia, fia) => (zero(UFD), zero(UFD)))
+    end
     function SingleBalance(cur::Symbol, fia::Symbol)
         @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
         new((cur, fia) => (zero(UFD), zero(UFD)))
     end
-    function SingleBalance(
-        cur::Symbol, fia::Symbol
-        bal::NTuple{2, Union{UFD,SFD,Rational{<:Unsigned},Rational{<:Signed}}})
+    function SingleBalance(fia::Symbol, bal::INPUTS)
+        @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
+        new((fia, fia) => (UFD(SFD(bal)), UFD(SFD(bal))))
+    end
+    function SingleBalance(cur::Symbol, fia::Symbol, bal::NTuple{2,INPUTS})
         @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
         new((cur, fia) => (UFD(SFD(bal[1])), UFD(SFD(bal[2]))))
     end
@@ -65,6 +78,10 @@ function +(x::SingleBalance, y::SingleBalance)
     )
 end
 
+function +(x::SingleBalance, y::NTuple{2,Union{UFD,SFD,Rational{<:Unsigned},Rational{<:Signed}}})
+    x + SingleBalance(x.BAL[1]..., y)
+end
+
 # Subtractions must ignore the subtracting operand's FIAT value, that is meaningless, thus, it
 #  (i) must make additional checks;
 # (ii) must preserve the first operand's FIAT-to-CRYPTO ratio!
@@ -72,7 +89,7 @@ function -(x::SingleBalance, y::SingleBalance)
     @assert(x.BAL[1][1] == y.BAL[1][1], "Can't sub different currencies!")
     @assert(x.BAL[2][1] >= y.BAL[2][1], "Can't take more than it has!")
     nwBal = x.BAL[2][1] - y.BAL[2][1]
-    ratio = nwBAL / x.BAL[2][1]
+    ratio = nwBal / x.BAL[2][1]
     SingleBalance(
         x.BAL[1]...,
         (nwBal, ratio * x.BAL[2][2])
@@ -89,10 +106,10 @@ end
 #--------------------------------------------------------------------------------------------------#
 
 """
-`struct MultiBalance <: AbstractMultiBalance`\n
+`struct MultiBalance <: AbstractBalance`\n
 Rolling, multi-currency balance.
 """
-struct MultiBalance <: AbstractMultiBalance
+struct MultiBalance <: AbstractBalance
     REF::Symbol
     BAL::Dict{Symbol,Tuple{UFD, UFD}}
     function MultiBalance(ref::Symbol)
@@ -159,6 +176,6 @@ hasSameRef(x::MultiBalance, y::MultiBalance) = x.REF == y.REF
 """
 """
 function +(x::MultiBalance, y::Pair{Symbol,Tuple{UFD, UFD}})
-
+end
 
 
