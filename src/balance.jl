@@ -14,11 +14,27 @@ export UFD, SFD
 #                                 Rolling, Multi-Currency Balance                                  #
 #--------------------------------------------------------------------------------------------------#
 
+"""
+`struct MultiBalance <: AbstractMultiBalance`\n
+Rolling, multi-currency balance.
+"""
 struct MultiBalance <: AbstractMultiBalance
     REF::Symbol
     BAL::Dict{Symbol,Tuple{SFD, SFD}}
     function MultiBalance(ref::Symbol)
         new(ref, Dict{Symbol,Tuple{SFD, SFD}}(ref => (zero(SFD), zero(SFD))))
+    end
+    function MultiBalance(ref::Symbol, iBAL::Tuple{SFD, SFD})
+        @assert(iBAL[1] >= zero(SFD), "Negative balances are prohibited!")
+        @assert(iBAL[2] >= zero(SFD), "Negative balances are prohibited!")
+        new(ref, Dict{Symbol,Tuple{SFD, SFD}}(ref => iBAL))
+    end
+    function MultiBalance(ref::Symbol, iBAL::Dict{Symbol,Tuple{SFD, SFD}})
+        for CUR in keys(iBAL)
+            @assert(iBAL[CUR][1] >= zero(SFD), "Negative balances are prohibited!")
+            @assert(iBAL[CUR][2] >= zero(SFD), "Negative balances are prohibited!")
+        end
+        new(ref, Dict{Symbol,Tuple{SFD, SFD}}(ref => iBAL))
     end
 end
 
@@ -38,5 +54,46 @@ function Base.show(io::IO, ::MIME"text/plain", mb::MultiBalance)
         print(@sprintf(" (%12.2f %s)", mb.BAL[CUR][2], string(mb.REF)), RESET)
     end
 end
+
+
+#--------------------------------------------------------------------------------------------------#
+#                                      MultiBalance Functions                                      #
+#--------------------------------------------------------------------------------------------------#
+
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+#                                            Primitives                                            #
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+
+import Base: +, -
+
+"""
+``\n
+"""
+function Base.+(this::Tuple{SFD,SFD}, that::Tuple{SFD,SFD})
+    for item in (this, that)
+        for indx in (1, 2)
+            @assert(item[indx] >= zero(SFD), "Negative amounts are prohibited on Tuple{SFD,SFD}!")
+        end
+    end
+end
+
+
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+#                                        MultiBalance-Level                                        #
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+
+"""
+`hasSameRef(x::MultiBalance, y::MultiBalance)::Bool`\n
+Tests whether `x` and `y` `MultiBalance` have the same reference, i.e., the same `.REF` data member.\n
+For `MultiBalance`s, the `.REF` data member is meant to be a reference FIAT currency. Usually `:BRL`.
+Every balance for every coin type is simultaneously tracked for its equivalent `.REF` (average purchase
+price); which is different, in general, than it's current market value.
+"""
+hasSameRef(x::MultiBalance, y::MultiBalance) = x.REF == y.REF
+
+"""
+"""
+function +(x::MultiBalance, y::Pair{Symbol,Tuple{SFD, SFD}})
+
 
 
