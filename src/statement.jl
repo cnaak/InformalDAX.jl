@@ -15,6 +15,9 @@ struct GenericStatementLine <: AbstractStatementLine
     TransactionAmount::String
     TransactionOutcome::String
     GenericStatementLine(RawStatementLine::String) = begin
+        if length(strip(RawStatementLine)) == 0
+            return new("", "", "", "", "")
+        end
         noCGr(lab::String) = raw"(?<" * lab * raw">[^,]+)"
         noQGr(lab::String) = raw""""?(?<""" * lab * raw""">[^"]+)"?"""
         tmp = join([noCGr("dat"), noCGr("typ"), noCGr("coi"), noQGr("amt"), noCGr("out")], ",")
