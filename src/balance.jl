@@ -1,14 +1,67 @@
-import Base: show
+import Base: show, +, -
 
 #--------------------------------------------------------------------------------------------------#
 #                                  FixedPoint number for finances                                  #
 #--------------------------------------------------------------------------------------------------#
 
 
-UFD = FixedDecimal{UInt64,10} # from          0.0000000000 to 0.0000000001 upto 1844674407.3709551615
-SFD = FixedDecimal{ Int64,10} # from -922337203.6854775808 to 0.0000000001 upto  922337203.6854775807
+SFD =  FixedDecimal{Int64,10}   # from -922337203.6854775808
+                                # upto          0.0000000000
+                                # upto          0.0000000001
+                                # upto  922337203.6854775807
+
+UFD = FixedDecimal{UInt64,10}   # from          0.0000000000
+                                # upto          0.0000000001
+                                # upto  922337203.6854775807
+                                # upto 1844674407.3709551615 (not meant to be used for compat)
 
 export UFD, SFD
+
+
+#--------------------------------------------------------------------------------------------------#
+#                                Auxiliar, Single-Currency Balance                                 #
+#--------------------------------------------------------------------------------------------------#
+
+"""
+`struct SingleBalance <: AbstractBalance`\n
+Rolling, single-currency balance.
+"""
+struct SingleBalance <: AbstractBalance
+    BAL::Pair{Symbol,Tuple{UFD, UFD}}
+    FIA::Bool
+    function SingleBalance(cur::Symbol, fia::Bool = false)
+        new(cur => (zero(UFD), zero(UFD)), fia)
+    end
+    function SingleBalance(cur::Symbol, BAL::Tuple{UFD, UFD}, fia::Bool = false)
+        for indx in 1:2
+            @assert(BAL[indx] < typemax(FixedDecimal{Int64,10}), "Overflow")
+        end
+        new((cur => BAL))
+    end
+end
+
+SingleBalance(that::SingleBalance) = SingleBalance(that.BAL)
+
+export SingleBalance
+
+function Base.show(io::IO, ::MIME"text/plain", x::SingleBalance)
+    WBOLD = Crayon(foreground = :white, bold = true, background = :dark_gray)
+    FAINT = Crayon(foreground = :light_gray, bold = false, background = :default)
+    RESET = Crayon(reset = true)
+    print(WBOLD, string(x.BAL[1]) * ":")
+    print(FAINT, @sprintf(" %20.10f", x.BAL[2]), RESET)
+end
+
++(this::SingleBalance, that::Tuple{UFD,UFD}) = this[1] + that[1], this[2] + that[2]
+
+function -(this::Tuple{UFD,UFD}, that::UFD)
+    @assert(this[1] >= that, "Can't take more that one has!")
+    ret = this[1] - that
+    rat = ret / this[1]
+    return ret, UFD(rat * this[2])
+end
+
+
 
 #--------------------------------------------------------------------------------------------------#
 #                                 Rolling, Multi-Currency Balance                                  #
@@ -20,23 +73,28 @@ Rolling, multi-currency balance.
 """
 struct MultiBalance <: AbstractMultiBalance
     REF::Symbol
-    BAL::Dict{Symbol,Tuple{SFD, SFD}}
+    BAL::Dict{Symbol,Tuple{UFD, UFD}}
     function MultiBalance(ref::Symbol)
-        new(ref, Dict{Symbol,Tuple{SFD, SFD}}(ref => (zero(SFD), zero(SFD))))
+        new(ref, Dict{Symbol,Tuple{UFD, UFD}}(ref => (zero(UFD), zero(UFD))))
     end
-    function MultiBalance(ref::Symbol, iBAL::Tuple{SFD, SFD})
-        @assert(iBAL[1] >= zero(SFD), "Negative balances are prohibited!")
-        @assert(iBAL[2] >= zero(SFD), "Negative balances are prohibited!")
-        new(ref, Dict{Symbol,Tuple{SFD, SFD}}(ref => iBAL))
-    end
-    function MultiBalance(ref::Symbol, iBAL::Dict{Symbol,Tuple{SFD, SFD}})
-        for CUR in keys(iBAL)
-            @assert(iBAL[CUR][1] >= zero(SFD), "Negative balances are prohibited!")
-            @assert(iBAL[CUR][2] >= zero(SFD), "Negative balances are prohibited!")
+    function MultiBalance(ref::Symbol, iBAL::Tuple{UFD, UFD})
+        for indx in 1:2
+            @assert(iBAL[indx] < typemax(FixedDecimal{Int64,10}), "Overflow")
         end
-        new(ref, Dict{Symbol,Tuple{SFD, SFD}}(ref => iBAL))
+        new(ref, Dict(ref => iBAL))
+    end
+    function MultiBalance(ref::Symbol, iBAL::Dict{Symbol,Tuple{UFD, UFD}})
+        @assert(ref in keys(iBAL), "Orphaned reference currency!")
+        for CUR in keys(iBAL)
+            for indx in 1:2
+                @assert(iBAL[CUR][indx] < typemax(FixedDecimal{Int64,10}), "Overflow")
+            end
+        end
+        new(ref, iBAL)
     end
 end
+
+MultiBalance(that::MultiBalance) = MultiBalance(that.REF, that.BAL)
 
 export MultiBalance
 
@@ -64,20 +122,6 @@ end
 #                                            Primitives                                            #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
-import Base: +, -
-
-"""
-``\n
-"""
-function Base.+(this::Tuple{SFD,SFD}, that::Tuple{SFD,SFD})
-    for item in (this, that)
-        for indx in (1, 2)
-            @assert(item[indx] >= zero(SFD), "Negative amounts are prohibited on Tuple{SFD,SFD}!")
-        end
-    end
-end
-
-
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 #                                        MultiBalance-Level                                        #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
@@ -93,7 +137,7 @@ hasSameRef(x::MultiBalance, y::MultiBalance) = x.REF == y.REF
 
 """
 """
-function +(x::MultiBalance, y::Pair{Symbol,Tuple{SFD, SFD}})
+function +(x::MultiBalance, y::Pair{Symbol,Tuple{UFD, UFD}})
 
 
 
