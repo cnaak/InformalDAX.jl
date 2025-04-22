@@ -23,14 +23,13 @@ end
 export GenericStatementLine
 
 function Base.show(io::IO, ::MIME"text/plain", gl::GenericStatementLine)
-    msg  = "StLn: "
-    msg *= join([
-        gl.HistoryTradesWsData,
-        gl.TransactionType,
-        gl.TransactionCoin,
-        gl.TransactionAmount,
-        gl.TransactionOutcome
-    ], "\n      ")
+    msg = join([
+        @sprintf("Date: %20s, ", gl.HistoryTradesWsData),
+        @sprintf("Type: %22s, ", gl.TransactionType),
+        @sprintf("Coin: %10s, ", gl.TransactionCoin),
+        @sprintf("Amnt: %24s, ", gl.TransactionAmount),
+        @sprintf("Outc: %08s.", gl.TransactionOutcome),
+    ])
     print(io, msg)
 end
 
