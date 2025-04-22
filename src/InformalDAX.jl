@@ -12,5 +12,8 @@ include("abstract.jl")
 # statement utils
 include("statement.jl")
 
+# rolling, multi-currency balance
+include("balance.jl")
+
 # Module
 end
