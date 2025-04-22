@@ -107,22 +107,22 @@ end
 #--------------------------------------------------------------------------------------------------#
 
 """
-`struct MultiBalance <: AbstractBalance`\n
-Rolling, multi-currency balance.
+`struct MultiFTBalance <: AbstractBalance`\n
+Rolling, fiat-tracking, multi-currency balance.
 """
-struct MultiBalance <: AbstractBalance
+struct MultiFTBalance <: AbstractBalance
     REF::Symbol
     BAL::Dict{Symbol,Tuple{UFD, UFD}}
-    function MultiBalance(ref::Symbol)
+    function MultiFTBalance(ref::Symbol)
         new(ref, Dict{Symbol,Tuple{UFD, UFD}}(ref => (zero(UFD), zero(UFD))))
     end
-    function MultiBalance(ref::Symbol, iBAL::Tuple{UFD, UFD})
+    function MultiFTBalance(ref::Symbol, iBAL::Tuple{UFD, UFD})
         for indx in 1:2
             @assert(iBAL[indx] < typemax(FixedDecimal{Int64,10}), "Overflow")
         end
         new(ref, Dict(ref => iBAL))
     end
-    function MultiBalance(ref::Symbol, iBAL::Dict{Symbol,Tuple{UFD, UFD}})
+    function MultiFTBalance(ref::Symbol, iBAL::Dict{Symbol,Tuple{UFD, UFD}})
         @assert(ref in keys(iBAL), "Orphaned reference currency!")
         for CUR in keys(iBAL)
             for indx in 1:2
@@ -133,11 +133,11 @@ struct MultiBalance <: AbstractBalance
     end
 end
 
-MultiBalance(that::MultiBalance) = MultiBalance(that.REF, that.BAL)
+MultiFTBalance(that::MultiFTBalance) = MultiFTBalance(that.REF, that.BAL)
 
-export MultiBalance
+export MultiFTBalance
 
-function Base.show(io::IO, ::MIME"text/plain", mb::MultiBalance)
+function Base.show(io::IO, ::MIME"text/plain", mb::MultiFTBalance)
     WBOLD = Crayon(foreground = :white, bold = true, background = :dark_gray)
     FAINT = Crayon(foreground = :light_gray, bold = false, background = :default)
     RESET = Crayon(reset = true)
@@ -154,7 +154,7 @@ end
 
 
 #--------------------------------------------------------------------------------------------------#
-#                                      MultiBalance Functions                                      #
+#                                      MultiFTBalance Functions                                      #
 #--------------------------------------------------------------------------------------------------#
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
@@ -162,21 +162,21 @@ end
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                        MultiBalance-Level                                        #
+#                                        MultiFTBalance-Level                                        #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
 """
-`hasSameRef(x::MultiBalance, y::MultiBalance)::Bool`\n
-Tests whether `x` and `y` `MultiBalance` have the same reference, i.e., the same `.REF` data member.\n
-For `MultiBalance`s, the `.REF` data member is meant to be a reference FIAT currency. Usually `:BRL`.
+`hasSameRef(x::MultiFTBalance, y::MultiFTBalance)::Bool`\n
+Tests whether `x` and `y` `MultiFTBalance` have the same reference, i.e., the same `.REF` data member.\n
+For `MultiFTBalance`s, the `.REF` data member is meant to be a reference FIAT currency. Usually `:BRL`.
 Every balance for every coin type is simultaneously tracked for its equivalent `.REF` (average purchase
 price); which is different, in general, than it's current market value.
 """
-hasSameRef(x::MultiBalance, y::MultiBalance) = x.REF == y.REF
+hasSameRef(x::MultiFTBalance, y::MultiFTBalance) = x.REF == y.REF
 
 """
 """
-function +(x::MultiBalance, y::Pair{Symbol,Tuple{UFD, UFD}})
+function +(x::MultiFTBalance, y::Pair{Symbol,Tuple{UFD, UFD}})
 end
 
 
