@@ -25,16 +25,16 @@ INPUTS = Union{UFD, SFD, Rational, Integer}
 export UFD, SFD, INPUTS
 
 
-#--------------------------------------------------------------------------------------------------#
-#                                Auxiliar, Single-Currency Balance                                 #
-#--------------------------------------------------------------------------------------------------#
+#==================================================================================================#
+#                         Rolling, Fiat-Tracking, Single-Currency Balance                          #
+#==================================================================================================#
 
 """
 `struct SingleFTBalance <: AbstractBalance`\n
 Rolling, fiat-tracking, single-currency balance.
 """
 struct SingleFTBalance <: AbstractBalance
-    BAL::Pair{NTuple{2, Symbol}, NTuple{2, UFD}}
+    DAT::Pair{NTuple{2, Symbol}, NTuple{2, UFD}}
     # Inner (validating) constructors
     function SingleFTBalance(fia::Symbol)
         @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
@@ -55,128 +55,137 @@ struct SingleFTBalance <: AbstractBalance
 end
 
 # Outer constructors
-SingleFTBalance(that::SingleFTBalance) = SingleFTBalance(that.BAL[1][1], that.BAL[1][2], that.BAL[2])
+function SingleFTBalance(dat::Pair{NTuple{2, Symbol}, NTuple{2, UFD}})
+    SingleFTBalance(dat[1][1], dat[1][2], dat[2])
+end
+SingleFTBalance(that::SingleFTBalance) = SingleFTBalance(that.DAT)
 
 export SingleFTBalance
 
 function Base.show(io::IO, ::MIME"text/plain", x::SingleFTBalance)
-    if x.BAL[1][1] in Currencies.allsymbols()
-        print(@sprintf("%20.*f %s ", Currencies.unit(x.BAL[1][1]), x.BAL[2][1], x.BAL[1][1]))
+    if x.DAT[1][1] in Currencies.allsymbols()
+        print(@sprintf("%20.*f %s ", Currencies.unit(x.DAT[1][1]), x.DAT[2][1], x.DAT[1][1]))
     else
-        print(@sprintf("%20.10f %s ", x.BAL[2][1], x.BAL[1][1]))
+        print(@sprintf("%20.10f %s ", x.DAT[2][1], x.DAT[1][1]))
     end
-    print(@sprintf("(%20.*f %s)", Currencies.unit(x.BAL[1][2]), x.BAL[2][2], x.BAL[1][2]))
+    print(@sprintf("(%20.*f %s)", Currencies.unit(x.DAT[1][2]), x.DAT[2][2], x.DAT[1][2]))
 end
 
 # Addition merges both CRYPTO and FIAT balances, thus, it
 #  (i) preserves FIAT spent on the partial purchases
 # (ii) most likely changes the effective exchange rate
 function +(x::SingleFTBalance, y::SingleFTBalance)
-    @assert(x.BAL[1] == y.BAL[1], "Can't add different currency pairs!")
+    @assert(x.DAT[1] == y.DAT[1], "Can't add different currency pairs!")
     SingleFTBalance(
-        x.BAL[1]...,
-        (x.BAL[2][1] + y.BAL[2][1], x.BAL[2][2] + y.BAL[2][2])
+        x.DAT[1]...,
+        (x.DAT[2][1] + y.DAT[2][1], x.DAT[2][2] + y.DAT[2][2])
     )
 end
 
 function +(x::SingleFTBalance, y::NTuple{2,INPUTS})
-    x + SingleFTBalance(x.BAL[1]..., y)
+    x + SingleFTBalance(x.DAT[1]..., y)
 end
 
 # Subtractions must ignore the subtracting operand's FIAT value, that is meaningless, thus, it
 #  (i) must make additional checks;
 # (ii) must preserve the first operand's FIAT-to-CRYPTO ratio!
 function -(x::SingleFTBalance, y::SingleFTBalance)
-    @assert(x.BAL[1][1] == y.BAL[1][1], "Can't sub different currencies!")
-    @assert(x.BAL[2][1] >= y.BAL[2][1], "Can't take more than it has!")
-    nwBal = x.BAL[2][1] - y.BAL[2][1]
-    ratio = nwBal / x.BAL[2][1]
+    @assert(x.DAT[1][1] == y.DAT[1][1], "Can't sub different currencies!")
+    @assert(x.DAT[2][1] >= y.DAT[2][1], "Can't take more than it has!")
+    nwBal = x.DAT[2][1] - y.DAT[2][1]
+    ratio = nwBal / x.DAT[2][1]
     SingleFTBalance(
-        x.BAL[1]...,
-        (nwBal, ratio * x.BAL[2][2])
+        x.DAT[1]...,
+        (nwBal, ratio * x.DAT[2][2])
     )
 end
 
 function -(x::SingleFTBalance, y::INPUTS)
-    x - SingleFTBalance(x.BAL[1]..., (y, x.BAL[2][2]))
+    x - SingleFTBalance(x.DAT[1]..., (y, x.DAT[2][2]))
 end
 
 
-#--------------------------------------------------------------------------------------------------#
-#                                 Rolling, Multi-Currency Balance                                  #
-#--------------------------------------------------------------------------------------------------#
+#==================================================================================================#
+#                          Rolling, Fiat-Tracking, Multi-Currency Balance                          #
+#==================================================================================================#
 
 """
 `struct MultiFTBalance <: AbstractBalance`\n
 Rolling, fiat-tracking, multi-currency balance.
 """
 struct MultiFTBalance <: AbstractBalance
-    REF::Symbol
-    BAL::Dict{Symbol,Tuple{UFD, UFD}}
-    function MultiFTBalance(ref::Symbol)
-        new(ref, Dict{Symbol,Tuple{UFD, UFD}}(ref => (zero(UFD), zero(UFD))))
+    DAT::Dict{NTuple{2, Symbol}, NTuple{2, UFD}}
+    # Inner (validating) constructors
+    function MultiFTBalance(fia::Symbol)
+        @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
+        dat = Dict((fia, fia) => (zero(UFD), zero(UFD)))
+        new(dat)
     end
-    function MultiFTBalance(ref::Symbol, iBAL::Tuple{UFD, UFD})
-        for indx in 1:2
-            @assert(iBAL[indx] < typemax(FixedDecimal{Int64,10}), "Overflow")
-        end
-        new(ref, Dict(ref => iBAL))
+    function MultiFTBalance(fia::Symbol, bal::INPUTS)
+        @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
+        dat = Dict((fia, fia) => (UFD(SFD(bal)), UFD(SFD(bal))))
+        new(dat)
     end
-    function MultiFTBalance(ref::Symbol, iBAL::Dict{Symbol,Tuple{UFD, UFD}})
-        @assert(ref in keys(iBAL), "Orphaned reference currency!")
-        for CUR in keys(iBAL)
-            for indx in 1:2
-                @assert(iBAL[CUR][indx] < typemax(FixedDecimal{Int64,10}), "Overflow")
-            end
+    function MultiFTBalance(dat::Dict{NTuple{2, Symbol}, NTuple{2, UFD}})
+        tSet = Set([ 𝑘[2] for 𝑘 in keys(dat) ])
+        @assert(length(tSet) == 1, "Multiple tracking fiats!")
+        tFia = [tSet...][1]
+        @assert(tFia in Currencies.allsymbols(), "Invalid fiat: \"$(tFia)\"")
+        for 𝑘 in keys(dat)
+            # More implied assertions
+            dat[𝑘] = Tuple([ UFD(SFD(i)) for i in dat[𝑘] ])
         end
-        new(ref, iBAL)
+        new(dat)
+    end
+    # SingleFTBalance-based constructors
+    function MultiFTBalance(sgl::SingleFTBalance)
+        new(Dict(sgl.DAT))
+    end
+    function MultiFTBalance(sgl::SingleFTBalance...)
+        𝑝 = [ i.DAT for i in sgl ]
+        𝑘 = [ i[1] for i in 𝑝 ]
+        @assert(len(sgl) == len(Set(sgl)), "Repeated keys for constructor!")
+        𝑓 = [ i[2] for i in 𝑘 ]
+        @assert(len(Set(𝑓)) == 1, "Multiple tracking fiats!")
+        new(Dict(𝑝))
+    end
+    # Mixed-type arguments
+    function MultiFTBalance(mul::MultiFTBalance)
+        new(mul.DAT)
+    end
+    function MultiFTBalance(mul::MultiFTBalance, sgl::SingleFTBalance)
+        @assert(!(sgl.DAT[1] in keys(mul.DAT)), "Repeated keys for constructor!")
+        𝑓 = [ i[2] for i in 𝑘 ]
+        @assert(len(Set([𝑓..., sgl.DAT[1][2]])) == 1, "Multiple tracking fiats!")
+        new(mul.DAT)
     end
 end
-
-MultiFTBalance(that::MultiFTBalance) = MultiFTBalance(that.REF, that.BAL)
 
 export MultiFTBalance
 
-function Base.show(io::IO, ::MIME"text/plain", mb::MultiFTBalance)
-    WBOLD = Crayon(foreground = :white, bold = true, background = :dark_gray)
-    FAINT = Crayon(foreground = :light_gray, bold = false, background = :default)
-    RESET = Crayon(reset = true)
-    for CUR in keys(mb.BAL)
-        print(WBOLD, string(CUR) * ":")
-        if CUR == mb.REF
-            print(FAINT, @sprintf(" %20.2f %s", mb.BAL[CUR][1], string(CUR)))
-        else
-            print(FAINT, @sprintf(" %20.10f %s", mb.BAL[CUR][1], string(CUR)))
-        end
-        print(@sprintf(" (%12.2f %s)", mb.BAL[CUR][2], string(mb.REF)), RESET)
+function Base.show(io::IO, M::MIME"text/plain", x::MultiFTBalance)
+    for i in sort([ keys(x.DAT)... ])
+        Base.show(io, M, SingleFTBalance(i))
+        print("\n")
     end
 end
 
 
 #--------------------------------------------------------------------------------------------------#
-#                                      MultiFTBalance Functions                                      #
+#                                     MultiFTBalance Functions                                     #
 #--------------------------------------------------------------------------------------------------#
 
-#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                            Primitives                                            #
-#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-
-#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                        MultiFTBalance-Level                                        #
-#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-
-"""
-`hasSameRef(x::MultiFTBalance, y::MultiFTBalance)::Bool`\n
-Tests whether `x` and `y` `MultiFTBalance` have the same reference, i.e., the same `.REF` data member.\n
-For `MultiFTBalance`s, the `.REF` data member is meant to be a reference FIAT currency. Usually `:BRL`.
-Every balance for every coin type is simultaneously tracked for its equivalent `.REF` (average purchase
-price); which is different, in general, than it's current market value.
-"""
-hasSameRef(x::MultiFTBalance, y::MultiFTBalance) = x.REF == y.REF
-
-"""
-"""
-function +(x::MultiFTBalance, y::Pair{Symbol,Tuple{UFD, UFD}})
+function +(x::MultiFTBalance, y::SingleFTBalance)
+    𝑘 = y.DAT[1]
+    if 𝑘 in x.DAT
+        𝑥 = SingleFTBalance(𝑘 => x.DAT[𝑘]) + y
+        
+    else
+    end
 end
+
+
+
+
 
 
