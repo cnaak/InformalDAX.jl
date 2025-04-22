@@ -30,36 +30,36 @@ export UFD, SFD, INPUTS
 #--------------------------------------------------------------------------------------------------#
 
 """
-`struct SingleBalance <: AbstractBalance`\n
-Rolling, single-currency balance.
+`struct SingleFTBalance <: AbstractBalance`\n
+Rolling, fiat-tracking, single-currency balance.
 """
-struct SingleBalance <: AbstractBalance
+struct SingleFTBalance <: AbstractBalance
     BAL::Pair{NTuple{2, Symbol}, NTuple{2, UFD}}
     # Inner (validating) constructors
-    function SingleBalance(fia::Symbol)
+    function SingleFTBalance(fia::Symbol)
         @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
         new((fia, fia) => (zero(UFD), zero(UFD)))
     end
-    function SingleBalance(cur::Symbol, fia::Symbol)
+    function SingleFTBalance(cur::Symbol, fia::Symbol)
         @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
         new((cur, fia) => (zero(UFD), zero(UFD)))
     end
-    function SingleBalance(fia::Symbol, bal::INPUTS)
+    function SingleFTBalance(fia::Symbol, bal::INPUTS)
         @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
         new((fia, fia) => (UFD(SFD(bal)), UFD(SFD(bal))))
     end
-    function SingleBalance(cur::Symbol, fia::Symbol, bal::NTuple{2,INPUTS})
+    function SingleFTBalance(cur::Symbol, fia::Symbol, bal::NTuple{2,INPUTS})
         @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
         new((cur, fia) => (UFD(SFD(bal[1])), UFD(SFD(bal[2]))))
     end
 end
 
 # Outer constructors
-SingleBalance(that::SingleBalance) = SingleBalance(that.BAL[1][1], that.BAL[1][2], that.BAL[2])
+SingleFTBalance(that::SingleFTBalance) = SingleFTBalance(that.BAL[1][1], that.BAL[1][2], that.BAL[2])
 
-export SingleBalance
+export SingleFTBalance
 
-function Base.show(io::IO, ::MIME"text/plain", x::SingleBalance)
+function Base.show(io::IO, ::MIME"text/plain", x::SingleFTBalance)
     if x.BAL[1][1] in Currencies.allsymbols()
         print(@sprintf("%20.*f %s ", Currencies.unit(x.BAL[1][1]), x.BAL[2][1], x.BAL[1][1]))
     else
@@ -71,34 +71,34 @@ end
 # Addition merges both CRYPTO and FIAT balances, thus, it
 #  (i) preserves FIAT spent on the partial purchases
 # (ii) most likely changes the effective exchange rate
-function +(x::SingleBalance, y::SingleBalance)
+function +(x::SingleFTBalance, y::SingleFTBalance)
     @assert(x.BAL[1] == y.BAL[1], "Can't add different currency pairs!")
-    SingleBalance(
+    SingleFTBalance(
         x.BAL[1]...,
         (x.BAL[2][1] + y.BAL[2][1], x.BAL[2][2] + y.BAL[2][2])
     )
 end
 
-function +(x::SingleBalance, y::NTuple{2,INPUTS})
-    x + SingleBalance(x.BAL[1]..., y)
+function +(x::SingleFTBalance, y::NTuple{2,INPUTS})
+    x + SingleFTBalance(x.BAL[1]..., y)
 end
 
 # Subtractions must ignore the subtracting operand's FIAT value, that is meaningless, thus, it
 #  (i) must make additional checks;
 # (ii) must preserve the first operand's FIAT-to-CRYPTO ratio!
-function -(x::SingleBalance, y::SingleBalance)
+function -(x::SingleFTBalance, y::SingleFTBalance)
     @assert(x.BAL[1][1] == y.BAL[1][1], "Can't sub different currencies!")
     @assert(x.BAL[2][1] >= y.BAL[2][1], "Can't take more than it has!")
     nwBal = x.BAL[2][1] - y.BAL[2][1]
     ratio = nwBal / x.BAL[2][1]
-    SingleBalance(
+    SingleFTBalance(
         x.BAL[1]...,
         (nwBal, ratio * x.BAL[2][2])
     )
 end
 
-function -(x::SingleBalance, y::INPUTS)
-    x - SingleBalance(x.BAL[1]..., (y, x.BAL[2][2]))
+function -(x::SingleFTBalance, y::INPUTS)
+    x - SingleFTBalance(x.BAL[1]..., (y, x.BAL[2][2]))
 end
 
 
