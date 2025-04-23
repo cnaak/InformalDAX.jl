@@ -50,7 +50,7 @@ struct ParsedStmtLine <: AbstractStatementLine
     COIN::Symbol
     AMNT::Tuple{Bool,UFD}
     OUTC::Bool
-    ParsedStmtLine(g::GenericStatementLine) = begin
+    function ParsedStmtLine(g::GenericStatementLine)
         # Date parsing
         dex  = raw"^(?<MM>[0-9]{2})/(?<DD>[0-9]{2})/(?<YY>[0-9]{4})"
         tex  = raw" (?<hh>[0-9]{2}):(?<mm>[0-9]{2}):(?<ss>[0-9]{2})"
@@ -69,16 +69,28 @@ struct ParsedStmtLine <: AbstractStatementLine
             )
         )
         # Type parsing
-        type = string(split(g.TransactionType, " ")[1])
+        𝑡𝑦𝑝𝑒 = string(split(g.TransactionType, " ")[1])
         # Coin parsing
         coin = Symbol(strip(g.TransactionCoin))
         # Amount parsing
         rex  = r"^(?<gr>[^(]+)"
         m    = match(rex, g.TransactionAmount)
         grp  = split(m[:gr], " ")
-        sbt  = startswith("\U2D", grp[1]) ? true : false
+        dash = "-\u2010\u2011\u2012\u2013\u2014\u2015\ufe58\ufe63\uff0d\u2e3a\u2e3b"
+        sbt  = grp[1][1] in dash ? true : false
+        DENO = 10000000000
+        NUME = Int64(
+            round(
+                parse(BigFloat, grp[1][2:end]) * DENO,
+                RoundNearest,
+                digits=0
+            )
+        )
+        amnt = (sbt, UFD(SFD(NUME//DENO)))
+        # Outcome parsing
+        outc = g.TransactionOutcome == "Success"
         # Final assembly
-        # new(date, type, coin, amnt, outc)
+        new(date, 𝑡𝑦𝑝𝑒, coin, amnt, outc)
     end
 end
 
