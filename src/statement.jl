@@ -46,9 +46,9 @@ end
 
 struct ParsedStmtLine <: AbstractStatementLine
     DATE::DateTime
-    TYPE::String
+    TYPE::Tuple{String, String}
     COIN::Symbol
-    AMNT::Tuple{Bool,UFD,Symbol}
+    AMNT::Tuple{Bool, UFD, Symbol}
     OUTC::Bool
     function ParsedStmtLine(g::GenericStatementLine)
         # Date parsing
@@ -57,7 +57,13 @@ struct ParsedStmtLine <: AbstractStatementLine
         rex  = Regex(join([dex, tex], ""))
         m    = match(rex, g.HistoryTradesWsData)
         if m isa Nothing
-            return new(DateTime(0, 1, 1, 0, 0, 0), "HEADER", :nothing, (false, zero(UFD), :nothing), false)
+            return new(
+                DateTime(0, 1, 1, 0, 0, 0),
+                ("Header", ""),
+                :nothing,
+                (false, zero(UFD), :nothing),
+                false
+            )
         end
         date = DateTime(
             Date(
@@ -72,7 +78,19 @@ struct ParsedStmtLine <: AbstractStatementLine
             )
         )
         # Type parsing
-        𝑡𝑦𝑝𝑒 = string(split(g.TransactionType, " ")[1])
+        splt = split(g.TransactionType, ' ')
+        if length(splt) >= 3
+            𝑡𝑦𝑝𝑒 = (string(splt[1]), string(splt[end]))
+        elseif length(splt) == 2
+            𝑡𝑦𝑝𝑒 = (string(splt[1]), string(splt[2]))
+        elseif length(splt) == 1
+            splt = split(splt[1], ['(', ')'])
+            if length(splt) >= 2
+                𝑡𝑦𝑝𝑒 = (string(splt[1]), string(splt[2]))
+            else
+                𝑡𝑦𝑝𝑒 = (string(splt[1]), "")
+            end
+        end
         # Coin parsing
         coin = Symbol(strip(g.TransactionCoin))
         # Amount parsing
