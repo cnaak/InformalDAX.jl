@@ -97,7 +97,7 @@ struct ParsedStmtLine <: AbstractStatementLine
         dash = "-\u2010\u2011\u2012\u2013\u2014\u2015\ufe58\ufe63\uff0d\u2e3a\u2e3b"
         if startswith(raw"R$")(g.TransactionAmount)
             # R$ (BRL) parsing
-            rex  = r"R\$ ?(?<sig>[+-]*)(?<val>[0-9.,]+)"
+            rex  = r"R\$ ?(?<sig>[+-]?)(?<val>[0-9.,]+)"
             m    = match(rex, g.TransactionAmount)
             if m isa Nothing
                 return new(date, 𝑡𝑦𝑝𝑒, coin, (false, zero(UFD), :nothing), false)
@@ -116,19 +116,24 @@ struct ParsedStmtLine <: AbstractStatementLine
             amnt = (sbt, UFD(SFD(NUME//DENO)), :BRL)
         else
             # Other parsing
-            rex  = r"^(?<gr>[^(]+)"
+            rex  = r"^(?<sig>[+-]?)(?<val>[0-9.,]+) ?(?<cur>[A-Z]+)"
             m    = match(rex, g.TransactionAmount)
-            grp  = split(m[:gr], " ")
-            sbt  = grp[1][1] in dash ? true : false
+            if m isa Nothing
+                return new(date, 𝑡𝑦𝑝𝑒, coin, (false, zero(UFD), :nothing), false)
+            end
+            sig  = m[:sig]
+            val  = m[:val]
+            cur  = m[:cur]
+            sbt  = sig[1] in dash ? true : false
             DENO = 10000000000
             NUME = Int64(
                 round(
-                    parse(BigFloat, grp[1][2:end]) * DENO,
+                    parse(BigFloat, join(split(val, ','))) * DENO,
                     RoundNearest,
                     digits=0
                 )
             )
-            amnt = (sbt, UFD(SFD(NUME//DENO)), Symbol(grp[2]))
+            amnt = (sbt, UFD(SFD(NUME//DENO)), Symbol(cur))
         end
         # Outcome parsing
         outc = g.TransactionOutcome == "Success"
