@@ -48,10 +48,39 @@ struct ParsedStmtLine <: AbstractStatementLine
     DATE::DateTime
     TYPE::String
     COIN::Symbol
-    AMNT::UFD
+    AMNT::Tuple{Bool,UFD}
     OUTC::Bool
     ParsedStmtLine(g::GenericStatementLine) = begin
-        rex
+        # Date parsing
+        dex = raw"^(?<MM>[0-9]{2})/(?<DD>[0-9]{2})/(?<YY>[0-9]{4})"
+        tex = raw" (?<hh>[0-9]{2}):(?<mm>[0-9]{2}):(?<ss>[0-9]{2})"
+        rex = Regex(join([dex, tex]))
+        m = match(rex, g.HistoryTradesWsData)
+        # Type parsing
+        type = string(split(g.TransactionType, " ")[1])
+        # Coin parsing
+        coin = Symbol(strip(g.TransactionCoin))
+        # Amount parsing
+        rex = r"^(?<gr>[^(]+)"
+        m   = match(rex, g.TransactionAmount)
+        grp = split(m[:gr], " ")
+        sbt = startswith("\U2D", grp[1]) ? true : false
+        TODO: CONTINUE FROM HERE
+        # Object preparation
+        date = DateTime(
+            Date(
+                 parse(Int, m[:YY]),
+                 parse(Int, m[:MM]),
+                 parse(Int, m[:DD]),
+            ),
+            Time(
+                 parse(Int, m[:hh]),
+                 parse(Int, m[:mm]),
+                 parse(Int, m[:ss]),
+            )
+        )
+        # Final assembly
+        new(date, type)
     end
 end
 
