@@ -14,8 +14,11 @@ include("abstract.jl")
 # statement utils
 include("statement.jl")
 
-# rolling, multi-currency balance
+# rolling, fiat-tracking single/multi-currency balances
 include("balance.jl")
+
+# Operations
+include("operations.jl")
 
 # Module
 end
