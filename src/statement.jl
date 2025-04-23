@@ -57,7 +57,7 @@ struct ParsedStmtLine <: AbstractStatementLine
         rex  = Regex(join([dex, tex], ""))
         m    = match(rex, g.HistoryTradesWsData)
         if m isa Nothing
-            return new(DateTime(0, 1, 1, 0, 0, 0), "HEADER", :NOCOIN, (false, zero(UFD)), false)
+            return new(DateTime(0, 1, 1, 0, 0, 0), "HEADER", :nothing, (false, zero(UFD), :nothing), false)
         end
         date = DateTime(
             Date(
@@ -82,7 +82,7 @@ struct ParsedStmtLine <: AbstractStatementLine
             rex  = r"R\$ ?(?<sig>[+-]*)(?<val>[0-9.,]+)"
             m    = match(rex, g.TransactionAmount)
             if m isa Nothing
-                return new(date, 𝑡𝑦𝑝𝑒, coin, (false, zero(UFD)), false)
+                return new(date, 𝑡𝑦𝑝𝑒, coin, (false, zero(UFD), :nothing), false)
             end
             sig  = m[:sig]
             val  = m[:val]
