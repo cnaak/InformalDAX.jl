@@ -92,12 +92,16 @@ end
 function -(x::SingleFTBalance, y::SingleFTBalance)
     @assert(x.DAT[1][1] == y.DAT[1][1], "Can't sub different currencies!")
     @assert(x.DAT[2][1] >= y.DAT[2][1], "Can't take more than it has!")
-    nwBal = x.DAT[2][1] - y.DAT[2][1]
-    ratio = nwBal / x.DAT[2][1]
-    SingleFTBalance(
-        x.DAT[1]...,
-        (nwBal, ratio * x.DAT[2][2])
-    )
+    if x.DAT[2][1] == zero(UFD)
+        return x
+    else
+        nwBal = x.DAT[2][1] - y.DAT[2][1]
+        ratio = nwBal / x.DAT[2][1]
+        return SingleFTBalance(
+            x.DAT[1]...,
+            (nwBal, ratio * x.DAT[2][2])
+        )
+    end
 end
 
 function -(x::SingleFTBalance, y::INPUTS)
@@ -205,6 +209,28 @@ function +(x::MultiFTBalance, y::MultiFTBalance)
     reduce(+, vcat(x, [SingleFTBalance(i) for i in y.DAT]...))
 end
 
+function -(x::MultiFTBalance, y::SingleFTBalance)
+    𝑘 = y.DAT[1]
+    @assert(𝑘 in keys(x.DAT), "Can't sub different currencies!")
+    singles = [ SingleFTBalance(i) for i in x.DAT ]
+    for i in 1:length(singles)
+        if 𝑘 == singles[i].DAT[1]
+            singles[i] -= y
+            break
+        end
+    end
+    MultiFTBalance(singles...)
+end
 
+-(y::SingleFTBalance, x::MultiFTBalance) = begin
+    @assert(length(keys(x.DAT)) == 1, "Can't sub different currencies!")
+    @assert(y.DAT[1] in keys(x.DAT), "Can't sub different currencies!")
+    𝑥 = [ SingleFTBalance(i) for i in x.DAT ][1]
+    y - 𝑥
+end
+
+function -(x::MultiFTBalance, y::MultiFTBalance)
+    reduce(-, vcat(x, [SingleFTBalance(i) for i in y.DAT]...))
+end
 
 
