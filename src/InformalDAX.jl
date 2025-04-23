@@ -11,6 +11,9 @@ using Dates
 # Includes - abstract supertypes
 include("abstract.jl")
 
+# finance numerical types
+include("finance.jl")
+
 # statement utils
 include("statement.jl")
 
