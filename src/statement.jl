@@ -52,21 +52,10 @@ struct ParsedStmtLine <: AbstractStatementLine
     OUTC::Bool
     ParsedStmtLine(g::GenericStatementLine) = begin
         # Date parsing
-        dex = raw"^(?<MM>[0-9]{2})/(?<DD>[0-9]{2})/(?<YY>[0-9]{4})"
-        tex = raw" (?<hh>[0-9]{2}):(?<mm>[0-9]{2}):(?<ss>[0-9]{2})"
-        rex = Regex(join([dex, tex]))
-        m = match(rex, g.HistoryTradesWsData)
-        # Type parsing
-        type = string(split(g.TransactionType, " ")[1])
-        # Coin parsing
-        coin = Symbol(strip(g.TransactionCoin))
-        # Amount parsing
-        rex = r"^(?<gr>[^(]+)"
-        m   = match(rex, g.TransactionAmount)
-        grp = split(m[:gr], " ")
-        sbt = startswith("\U2D", grp[1]) ? true : false
-        TODO: CONTINUE FROM HERE
-        # Object preparation
+        dex  = raw"^(?<MM>[0-9]{2})/(?<DD>[0-9]{2})/(?<YY>[0-9]{4})"
+        tex  = raw" (?<hh>[0-9]{2}):(?<mm>[0-9]{2}):(?<ss>[0-9]{2})"
+        rex  = Regex(join([dex, tex], ""))
+        m    = match(rex, g.HistoryTradesWsData)
         date = DateTime(
             Date(
                  parse(Int, m[:YY]),
@@ -79,8 +68,17 @@ struct ParsedStmtLine <: AbstractStatementLine
                  parse(Int, m[:ss]),
             )
         )
+        # Type parsing
+        type = string(split(g.TransactionType, " ")[1])
+        # Coin parsing
+        coin = Symbol(strip(g.TransactionCoin))
+        # Amount parsing
+        rex  = r"^(?<gr>[^(]+)"
+        m    = match(rex, g.TransactionAmount)
+        grp  = split(m[:gr], " ")
+        sbt  = startswith("\U2D", grp[1]) ? true : false
         # Final assembly
-        new(date, type)
+        # new(date, type, coin, amnt, outc)
     end
 end
 
