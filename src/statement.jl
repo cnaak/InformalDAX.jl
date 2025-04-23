@@ -86,7 +86,7 @@ struct ParsedStmtLine <: AbstractStatementLine
             end
             sig  = m[:sig]
             val  = m[:val]
-            sbt  = sig in dash ? true : false
+            sbt  = sig[1] in dash ? true : false
             DENO = 100
             NUME = Int64(
                 round(
