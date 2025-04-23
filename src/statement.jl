@@ -14,10 +14,8 @@ struct GenericStatementLine <: AbstractStatementLine
     TransactionCoin::String
     TransactionAmount::String
     TransactionOutcome::String
-    GenericStatementLine(RawStatementLine::String) = begin
-        if length(strip(RawStatementLine)) == 0
-            return new("", "", "", "", "")
-        end
+    GenericStatementLine(RawStatementLine::AbstractString) = begin
+        @assert(length(strip(RawStatementLine)) > 0, "Empty line.")
         noCGr(lab::String) = raw"(?<" * lab * raw">[^,]+)"
         noQGr(lab::String) = raw""""?(?<""" * lab * raw""">[^"]+)"?"""
         tmp = join([noCGr("dat"), noCGr("typ"), noCGr("coi"), noQGr("amt"), noCGr("out")], ",")
@@ -40,5 +38,24 @@ function Base.show(io::IO, ::MIME"text/plain", gl::GenericStatementLine)
     print(WBOLD, "Outc:", FAINT, @sprintf("%08s.", gl.TransactionOutcome ))
     print(RESET)
 end
+
+
+#--------------------------------------------------------------------------------------------------#
+#                                          ParsedStmtLine                                          #
+#--------------------------------------------------------------------------------------------------#
+
+struct ParsedStmtLine <: AbstractStatementLine
+    DATE::DateTime
+    TYPE::String
+    COIN::Symbol
+    AMNT::UFD
+    OUTC::Bool
+    ParsedStmtLine(g::GenericStatementLine) = begin
+        rex
+    end
+end
+
+
+
 
 
