@@ -145,16 +145,9 @@ end
 export ParsedStmtLine
 
 function Base.show(io::IO, ::MIME"text/plain", pl::ParsedStmtLine)
-    print(
-        @sprintf(
-            "Statement Line: (%s)\n  %s\n  %s\n  %s\n  %s",
-            pl.OUTC ? "\u2714" : "\u2716",
-            pl.DATE,
-            pl.TYPE,
-            pl.COIN,
-            pl.AMNT
-        )
-    )
+    print(@sprintf("Statement Line: (%s)\n  %s\n  %s\n  %s\n  %s",
+                   pl.OUTC ? "\u2714" : "\u2716",
+                   pl.DATE, pl.TYPE, pl.COIN, pl.AMNT))
 end
 
 
