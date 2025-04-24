@@ -24,9 +24,9 @@ function rollStatement(srcFi::String, prBal::MultiFTBalance = initStmt())
             display(BAL)
         elseif par.TYPE[1] == "Deposit" || par.TYPE[1] == "Redeemed"
             if par.OUTC
-                dep = SingleFTBalance(par.COIN, par.AMNT[2])
+                amt = SingleFTBalance((par.COIN, RFBFiat) => (par.AMNT[2], zero(UFD)))
                 # ASSUMES negative "Deposit"s never make it into statements
-                BAL += dep
+                BAL += amt
                 println(lin)
                 display(BAL)
             end
@@ -36,7 +36,7 @@ function rollStatement(srcFi::String, prBal::MultiFTBalance = initStmt())
             cryp, fiat = [ Symbol(i) for i in split(buyCurPair, '/') ]
             # tmpB = MultiFTBalance(SingleFTBalance(fiat), SingleFTBalance(cryp, fiat))
             if par.OUTC
-                amt = SingleFTBalance(par.COIN, par.AMNT[2])
+                amt = SingleFTBalance((par.COIN, RFBFiat) => (par.AMNT[2], zero(UFD)))
                 if par.AMNT[1]; BAL -= amt; else BAL += amt; end
                 println(lin)
                 display(BAL)
