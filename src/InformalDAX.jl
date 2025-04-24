@@ -23,5 +23,8 @@ include("balance.jl")
 # Operations
 include("operations.jl")
 
+# User functions
+include("user.jl")
+
 # Module
 end
