@@ -54,7 +54,7 @@ struct ParsedStmtLine <: AbstractStatementLine
     OUTC::Bool
     function ParsedStmtLine(g::GenericStatementLine)
         # Early exit for empty/last statement lines
-        if lenght(g.HistoryTradesWsData) == 0
+        if length(g.HistoryTradesWsData) == 0
             return new(DateTime(0, 1, 1, 0, 0, 0), ("Header", ""),
                        :nothing, (false, zero(UFD), :nothing), false)
         elseif (g.TransactionType    == "Type"   || 
