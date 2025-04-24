@@ -15,7 +15,9 @@ struct GenericStatementLine <: AbstractStatementLine
     TransactionAmount::String
     TransactionOutcome::String
     GenericStatementLine(RawStatementLine::AbstractString) = begin
-        @assert(length(strip(RawStatementLine)) > 0, "Empty line.")
+        if length(strip(RawStatementLine)) == 0
+            return new("", "", "", "", "")
+        end
         noCGr(lab::String) = raw"(?<" * lab * raw">[^,]+)"
         noQGr(lab::String) = raw""""?(?<""" * lab * raw""">[^"]+)"?"""
         tmp = join([noCGr("dat"), noCGr("typ"), noCGr("coi"), noQGr("amt"), noCGr("out")], ",")
@@ -51,6 +53,17 @@ struct ParsedStmtLine <: AbstractStatementLine
     AMNT::Tuple{Bool, UFD, Symbol}
     OUTC::Bool
     function ParsedStmtLine(g::GenericStatementLine)
+        # Early exit for empty/last statement lines
+        if lenght(g.HistoryTradesWsData) == 0
+            return new(DateTime(0, 1, 1, 0, 0, 0), ("Header", ""),
+                       :nothing, (false, zero(UFD), :nothing), false)
+        elseif (g.TransactionType    == "Type"   || 
+                g.TransactionCoin    == "Coin"   ||
+                g.TransactionAmount  == "Amount" ||
+                g.TransactionOutcome == "Status")
+            return new(DateTime(0, 1, 1, 0, 0, 0), ("Footer", ""), 
+                       :nothing, (false, zero(UFD), :nothing), false)
+        end
         # Date parsing
         dex  = raw"^(?<MM>[0-9]{2})/(?<DD>[0-9]{2})/(?<YY>[0-9]{4})"
         tex  = raw" (?<hh>[0-9]{2}):(?<mm>[0-9]{2}):(?<ss>[0-9]{2})"
