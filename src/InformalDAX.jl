@@ -18,7 +18,7 @@ include("finance.jl")
 include("statement.jl")
 
 # rolling, fiat-tracking single/multi-currency balances
-include("balance.jl")
+include("balances.jl")
 
 # Operations
 include("operations.jl")
