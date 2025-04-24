@@ -50,19 +50,19 @@ struct ParsedStmtLine <: AbstractStatementLine
     DATE::DateTime
     TYPE::Tuple{String, String}
     COIN::Symbol
-    AMNT::Tuple{Bool, UFD, Symbol}
+    AMNT::Tuple{Bool, SFD, Symbol}
     OUTC::Bool
     function ParsedStmtLine(g::GenericStatementLine)
         # Early exit for empty/last statement lines
         if length(g.HistoryTradesWsData) == 0
             return new(DateTime(0, 1, 1, 0, 0, 0), ("Header", ""),
-                       :nothing, (false, zero(UFD), :nothing), false)
+                       :nothing, (false, zero(SFD), :nothing), false)
         elseif (g.TransactionType    == "Type"   || 
                 g.TransactionCoin    == "Coin"   ||
                 g.TransactionAmount  == "Amount" ||
                 g.TransactionOutcome == "Status")
             return new(DateTime(0, 1, 1, 0, 0, 0), ("Footer", ""), 
-                       :nothing, (false, zero(UFD), :nothing), false)
+                       :nothing, (false, zero(SFD), :nothing), false)
         end
         # Date parsing
         dex  = raw"^(?<MM>[0-9]{2})/(?<DD>[0-9]{2})/(?<YY>[0-9]{4})"
@@ -74,7 +74,7 @@ struct ParsedStmtLine <: AbstractStatementLine
                 DateTime(0, 1, 1, 0, 0, 0),
                 ("Header", ""),
                 :nothing,
-                (false, zero(UFD), :nothing),
+                (false, zero(SFD), :nothing),
                 false
             )
         end
@@ -113,7 +113,7 @@ struct ParsedStmtLine <: AbstractStatementLine
             rex  = r"R\$ ?(?<sig>[+-]?)(?<val>[0-9.,]+)"
             m    = match(rex, g.TransactionAmount)
             if m isa Nothing
-                return new(date, 𝑡𝑦𝑝𝑒, coin, (false, zero(UFD), :nothing), false)
+                return new(date, 𝑡𝑦𝑝𝑒, coin, (false, zero(SFD), :nothing), false)
             end
             sig  = m[:sig]
             val  = m[:val]
@@ -126,13 +126,13 @@ struct ParsedStmtLine <: AbstractStatementLine
                     digits=0
                 )
             )
-            amnt = (sbt, UFD(SFD(NUME//DENO)), :BRL)
+            amnt = (sbt, SFD(NUME//DENO), :BRL)
         else
             # Other parsing
             rex  = r"^(?<sig>[+-]?)(?<val>[0-9.,]+) ?(?<cur>[A-Z]+)"
             m    = match(rex, g.TransactionAmount)
             if m isa Nothing
-                return new(date, 𝑡𝑦𝑝𝑒, coin, (false, zero(UFD), :nothing), false)
+                return new(date, 𝑡𝑦𝑝𝑒, coin, (false, zero(SFD), :nothing), false)
             end
             sig  = m[:sig]
             val  = m[:val]
@@ -146,7 +146,7 @@ struct ParsedStmtLine <: AbstractStatementLine
                     digits=0
                 )
             )
-            amnt = (sbt, UFD(SFD(NUME//DENO)), Symbol(cur))
+            amnt = (sbt, SFD(NUME//DENO), Symbol(cur))
         end
         # Outcome parsing
         outc = g.TransactionOutcome == "Success"
