@@ -110,11 +110,21 @@ struct MultiFTBalance <: AbstractBalance
         dat = Dict((fia, fia) => (UFD(SFD(bal)), UFD(SFD(bal))))
         new(dat)
     end
+    function MultiFTBalance(cry::Symbol, fia::Symbol, crb::INPUTS, fib::INPUTS)
+        @assert(!(cry in Currencies.allsymbols()), "Invalid crypto: \"$(cry)\"")
+        @assert(  fia in Currencies.allsymbols(),  "Invalid fiat: \"$(fia)\"")
+        dat = Dict((cry, fia) => (UFD(SFD(crb)), UFD(SFD(fib))))
+        new(dat)
+    end
     function MultiFTBalance(dat::Dict{NTuple{2, Symbol}, NTuple{2, UFD}})
         tSet = Set([ 𝑘[2] for 𝑘 in keys(dat) ])
         @assert(length(tSet) == 1, "Multiple tracking fiats!")
         tFia = [tSet...][1]
         @assert(tFia in Currencies.allsymbols(), "Invalid fiat: \"$(tFia)\"")
+        cSet = Set([ 𝑘[1] for 𝑘 in keys(dat) if 𝑘[1] != 𝑘[2] ])
+        for cry in cSet
+            @assert(!(cry in Currencies.allsymbols()), "Invalid crypto: \"$(cry)\"")
+        end
         for 𝑘 in keys(dat)
             # More implied assertions
             dat[𝑘] = Tuple([ UFD(SFD(i)) for i in dat[𝑘] ])
@@ -156,9 +166,11 @@ end
 export MultiFTBalance
 
 function Base.show(io::IO, ::MIME"text/plain", x::MultiFTBalance)
-    for i in sort([ keys(x.DAT)... ])
-        Base.show(io, "text/plain", SingleFTBalance(i => x.DAT[i]))
-        print("\n")
+    𝑘 = sort([ keys(x.DAT)... ])
+    𝑙 = length(𝑘)
+    for i in 1:𝑙
+        Base.show(io, "text/plain", SingleFTBalance(𝑘[i] => x.DAT[𝑘[i]]))
+        if i < 𝑙; print("\n"); end
     end
 end
 
