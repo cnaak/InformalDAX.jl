@@ -56,8 +56,8 @@ end
 end
 
 # Left/right scalar multiplication
-*(x::SUB, y::DECI) = SUB(x.cur, x.bal * y)
-*(y::DECI, x::SUB) = x * y
+*(x::SUB, y::DECIM) = SUB(x.cur, x.bal * y)
+*(y::DECIM, x::SUB) = x * y
 
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::SUB)
