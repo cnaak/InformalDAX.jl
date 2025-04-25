@@ -74,7 +74,7 @@ struct STB <: UniTracked
     fiat::SUB
     function STB(CRYP::SUB, FIAT::SUB)
         @assert(isFiat(FIAT), "Tracking must be against a Fiat currency!")
-        @assert(xor(bare(CRYP) == Zero(SFD), bare(FIAT) == Zero(SFD)),
+        @assert(xor(bare(CRYP) == zero(SFD), bare(FIAT) == zero(SFD)),
                 "Exchange ratio must be finite!")
         new(CRYP, FIAT)
     end
