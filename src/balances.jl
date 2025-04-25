@@ -2,7 +2,7 @@
 #         balances.jl - crypto assets balances with fiat/on-ramp tracking (purchase price)         #
 #--------------------------------------------------------------------------------------------------#
 
-import Base: show, +, -
+import Base: show, +, -, *
 
 
 #--------------------------------------------------------------------------------------------------#
@@ -54,6 +54,10 @@ end
     @assert(symb(x) == symb(y), "Can't sub different currency balances!")
     return SUB(x.cur, x.bal - y.bal)
 end
+
+# Left/right scalar multiplication
+*(x::SUB, y::DECI) = SUB(x.cur, x.bal * y)
+*(y::DECI, x::SUB) = x * y
 
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::SUB)
