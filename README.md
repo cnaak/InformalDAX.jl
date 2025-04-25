@@ -41,7 +41,8 @@ and tracked taken balances are:
 julia> xfer = SUB(:BTC, 1//1000)                    # SUB is a Single Untracked Balance object
         +0.0010000000    BTC
 
-julia> myBTCBal, xfer = myBTCBal - xfer;            # xfer will go from an SUB to an STB
+julia> myBTCBal, xfer = myBTCBal - xfer;            # Updates `myBTCBal` and adds
+                                                    # tracking info to `xfer`
 
 julia> [ display(i) for i in (myBTCBal, xfer) ];
         +0.0090000000    BTC
