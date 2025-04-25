@@ -19,9 +19,6 @@ struct SUB <: Untrakd
     SUB(CUR::Symbol, BAL::SFD = zero(SFD)) = new(CUR, BAL)
 end
 
-# export
-export SUB
-
 # bare function to return the "bare" balance
 bare(x::SUB) = x.bal
 
@@ -43,15 +40,18 @@ isFiat(x::SUB) = x.cur in Currencies.allsymbols()
 # Returns true if x.cur is not a fiat currency
 isCryp(x::SUB) = !isFiat(x)
 
+# export
+export SUB, bare, symb, name, decs, isFiat, isCryp
+
 # Addition
 +(x::SUB, y::SUB) = begin
-    @assert(x.cur == y.cur, "Can't add different currency balances!")
+    @assert(symb(x) == symb(y), "Can't add different currency balances!")
     return SUB(x.cur, x.bal + y.bal)
 end
 
 # Subtraction
 -(x::SUB, y::SUB) = begin
-    @assert(x.cur == y.cur, "Can't sub different currency balances!")
+    @assert(symb(x) == symb(y), "Can't sub different currency balances!")
     return SUB(x.cur, x.bal - y.bal)
 end
 
@@ -84,10 +84,10 @@ end
 export STB
 
 # bare function to return the "bare" balance
-bare(x::STB) = (x.cryp.bal, x.fiat.bal)
+bare(x::STB) = (bare(x.cryp), bare(x.fiat))
 
 # symb function to return the currency symbol
-symb(x::STB) = (x.cryp.cur, x.fiat.cur)
+symb(x::STB) = (symb(x.cryp), symb(x.fiat))
 
 # Functor returns currency => balance Pair
 (x::STB)() = symb(x) => bare(x)
@@ -96,7 +96,7 @@ symb(x::STB) = (x.cryp.cur, x.fiat.cur)
 name(x::STB) = @sprintf("%s/%s", name(x.cryp), name(x.fiat))
 
 # decs function to return the currency number of decimal places
-decs(x::STB) = isFiat(x) ? Currencies.unit(x.cur) : 10
+decs(x::STB) = (decs(x.cryp), decs(x.fiat))
 
 # Returns true if x.cryp.cur is a fiat currency
 isFiat(x::STB) = x.cryp.cur in Currencies.allsymbols()
@@ -106,19 +106,26 @@ isCryp(x::STB) = !isFiat(x)
 
 # Addition
 +(x::STB, y::STB) = begin
-    @assert(x.cur == y.cur, "Can't add different currency balances!")
-    return STB(x.cur, x.bal + y.bal)
+    @assert(symb(x) == symb(y), "Can't add different tracking pair balances!")
+    return STB(x.cryp + y.cryp, x.fiat + y.fiat)
 end
 
 # Subtraction
--(x::STB, y::STB) = begin
-    @assert(x.cur == y.cur, "Can't sub different currency balances!")
-    return STB(x.cur, x.bal - y.bal)
+-(x::STB, y::SUB) = begin
+    @assert(symb(x)[1] == symb(y), "Can't sub different tracking pair balances!")
+    @assert(bare(x)[1] >= bare(y), "Can't take more than it has with tracking!")
+    diff = x.cryp - y
+    rati = bare(diff) / bare(x.cryp)[1]
+    rcmp = one(SFD) - rati
+    resu = STB(diff, rati * x.fiat)
+    takn = STB(   y, rcmp * x.fiat)
+    return (resu, takn)
 end
 
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::STB)
-    print(@sprintf("%+21.*f %6s", decs(x), bare(x), name(x)))
+    show(io, MIME"text/plain", x.cryp)
+    show(io, MIME"text/plain", x.fiat)
 end
 
 
