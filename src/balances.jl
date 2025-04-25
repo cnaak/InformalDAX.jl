@@ -118,10 +118,11 @@ end
 """
 # InformalDAX's "tracked" subtraction of crypto assets
 
-`-(x::STB, y::SUB)::Tuple{STP,STP}`\n
+`-(x::STB, y::SUB)::Tuple{STB,STB}`\n
 Tracked subtraction \$x - y\$ that returns a `(result, taken)` tuple, where `result` is the
-resulting tracked subtraction, and `taken` is the tracked taken amount _implied_ by `y` (an
-untracked balance).
+resulting tracked subtraction, and `taken` is the tracked taken amount based on `y` (an
+untracked balance), such that `taken.cryp == y`, and `taken.fiat` is adjusted to the proper
+ratio of purchasing fiat currency.
 
 ## Example:
 
@@ -139,14 +140,16 @@ Then, out of this balance, `0.001 BTC` gets transfered away. The remaining track
 and tracked taken balances are:
 
 ```julia
-julia> df, tk = myBTCBal - SUB(:BTC, SFD(1//1000));
+julia> transfer = SUB(:BTC, SFD(1//1000))
+        +0.0010000000    BTC
 
-julia> [df, tk]
-2-element Vector{STB}:
-         +0.0090000000    BTC
+julia> df, tk = myBTCBal - transfer;
+
+julia> [ display(i) for i in (df, tk) ];
+        +0.0090000000    BTC
               +882.00    USD
 
-         +0.0010000000    BTC
+        +0.0010000000    BTC
                +98.00    USD
 ```
 
@@ -154,7 +157,7 @@ Meaning the retained balance of `0.009 BTC` retained `882 USD` in fiat purchase 
 in `df`; and the taken amount of `0.001 BTC` represents a fraction worth of `98 USD` of its
 purchase price in fiat currency—the data in `tk`.
 """
--(x::STB, y::SUB)::Tuple{STP,STP} = begin
+-(x::STB, y::SUB)::Tuple{STB,STB} = begin
     @assert(symb(x)[1] == symb(y), "Can't sub different tracking pair balances!")
     @assert(bare(x)[1] >= bare(y), "Can't take more than it has with tracking!")
     dif = x.cryp - y                    # the difference
