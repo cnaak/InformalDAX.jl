@@ -227,9 +227,16 @@ fiat(x::MTB) = [keys(x.Mult)...][1][2]
 
 # keys - return the keys of `x` as a sorted vector of keys, the first always being the fiat one
 function keys(x::MTB)
+    myFind(item, iter) = begin
+        for i in 1:length(iter)
+            if iter[i] == item
+                return i
+            end
+        end
+    end
     f = fiat(x)
     k = [keys(x.Mult)...]
-    fid = findfirst((f, f), k)
+    fid = myFind((f, f), k)
     ret = [popat!(k,fid),]
     return append!(ret, sort(k))
 end
