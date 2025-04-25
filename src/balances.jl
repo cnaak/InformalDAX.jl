@@ -256,9 +256,9 @@ symb(x::MTB) = [i()[1] for i in x]
 pretty(x::MTB) = begin
     ret = String[]
     for 𝑘 in keys(x)
-        append!(ret, pretty(x.Mult[𝑘]))
+        append!(ret, [ pretty(x.Mult[𝑘])] )
     end
-    return join(ret, '\n')
+    return join(ret, "\n")
 end
 
 # show/display
