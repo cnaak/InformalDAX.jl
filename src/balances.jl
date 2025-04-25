@@ -124,8 +124,8 @@ end
 
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::STB)
-    print(x.cryp)
-    print(x.fiat)
+    display(x.cryp)
+    display(x.fiat)
 end
 
 
