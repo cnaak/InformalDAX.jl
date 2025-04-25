@@ -19,6 +19,9 @@ struct SUB <: Untrakd
     SUB(CUR::Symbol, BAL::SFD = zero(SFD)) = new(CUR, BAL)
 end
 
+# Outer constructors
+SUB(CUR::Symbol, BAL::DECIM) = SUB(CUR, SFD(BAL))
+
 # bare function to return the "bare" balance
 bare(x::SUB) = x.bal
 
