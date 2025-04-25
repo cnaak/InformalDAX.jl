@@ -46,6 +46,7 @@ isCryp(x::SUB) = !isFiat(x)
 
 # Pretty string function
 pretty(x::SUB) = @sprintf("%+*.*f %6s", 11 + decs(x), decs(x), bare(x), name(x))
+unipre(x::SUB) = @sprintf("%+21.10f %6s", bare(x), name(x))
 
 # export
 export SUB, bare, symb, name, decs, isFiat, isCryp, pretty
@@ -123,7 +124,9 @@ isFiat(x::STB) = x.cryp.cur in Currencies.allsymbols()
 isCryp(x::STB) = !isFiat(x)
 
 # Pretty string function
-pretty(x::STB) = @sprintf("%s (%s)", pretty(x.cryp), pretty(x.fiat))
+function pretty(x::STB)
+    @sprintf("%s (%s)", unipre(x.cryp), pretty(x.fiat))
+end
 
 # Addition
 +(x::STB, y::STB) = begin
