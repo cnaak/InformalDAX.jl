@@ -6,7 +6,7 @@ import Base: show, +, -
 
 
 #--------------------------------------------------------------------------------------------------#
-#                                Fiat-Untracked Crypto/Fiat Balance                                #
+#                                    Single, Untracked Balance.                                    #
 #--------------------------------------------------------------------------------------------------#
 
 """
@@ -19,20 +19,23 @@ struct SUB <: Untrakd
     SUB(CUR::Symbol, BAL::SFD = zero(SFD)) = new(CUR, BAL)
 end
 
-# Functor returns currency => balance Pair
-(x::SUB)() = x.cur => x.bal
+# export
+export SUB
 
 # bare function to return the "bare" balance
 bare(x::SUB) = x.bal
 
+# symb function to return the currency symbol
+symb(x::SUB) = x.cur
+
+# Functor returns currency => balance Pair
+(x::SUB)() = symb(x) => bare(x)
+
 # name function to return the currency "name"
-name(x::SUB) = string(x.cur)
+name(x::SUB) = string(symb(x))
 
 # decs function to return the currency number of decimal places
 decs(x::SUB) = isFiat(x) ? Currencies.unit(x.cur) : 10
-
-# export
-export SUB
 
 # Returns true if x.cur is a fiat currency
 isFiat(x::SUB) = x.cur in Currencies.allsymbols()
@@ -56,6 +59,69 @@ end
 function Base.show(io::IO, ::MIME"text/plain", x::SUB)
     print(@sprintf("%+21.*f %6s", decs(x), bare(x), name(x)))
 end
+
+
+#--------------------------------------------------------------------------------------------------#
+#                                     Single, Tracked Balance.                                     #
+#--------------------------------------------------------------------------------------------------#
+
+"""
+`struct STB <: UniTracked`\n
+Single, Tracked Balance.
+"""
+struct STB <: UniTracked
+    cryp::SUB
+    fiat::SUB
+    function STB(CRYP::SUB, FIAT::SUB)
+        @assert(isFiat(FIAT), "Tracking must be against a Fiat currency!")
+        @assert(xor(bare(CRYP) == Zero(SFD), bare(FIAT) == Zero(SFD)),
+                "Exchange ratio must be finite!")
+        new(CRYP, FIAT)
+    end
+end
+
+# export
+export STB
+
+# bare function to return the "bare" balance
+bare(x::STB) = (x.cryp.bal, x.fiat.bal)
+
+# symb function to return the currency symbol
+symb(x::STB) = (x.cryp.cur, x.fiat.cur)
+
+# Functor returns currency => balance Pair
+(x::STB)() = symb(x) => bare(x)
+
+# name function to return the currency "name"
+name(x::STB) = @sprintf("%s/%s", name(x.cryp), name(x.fiat))
+
+# decs function to return the currency number of decimal places
+decs(x::STB) = isFiat(x) ? Currencies.unit(x.cur) : 10
+
+# Returns true if x.cryp.cur is a fiat currency
+isFiat(x::STB) = x.cryp.cur in Currencies.allsymbols()
+
+# Returns true if x.cryp.cur is not a fiat currency
+isCryp(x::STB) = !isFiat(x)
+
+# Addition
++(x::STB, y::STB) = begin
+    @assert(x.cur == y.cur, "Can't add different currency balances!")
+    return STB(x.cur, x.bal + y.bal)
+end
+
+# Subtraction
+-(x::STB, y::STB) = begin
+    @assert(x.cur == y.cur, "Can't sub different currency balances!")
+    return STB(x.cur, x.bal - y.bal)
+end
+
+# show/display
+function Base.show(io::IO, ::MIME"text/plain", x::STB)
+    print(@sprintf("%+21.*f %6s", decs(x), bare(x), name(x)))
+end
+
+
 
 
 #==================================================================================================#
