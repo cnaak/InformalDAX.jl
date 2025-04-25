@@ -89,7 +89,8 @@ struct STB <: UniTracked
 end
 
 # outer constructors
-STB(symb::NTuple{2,Symbol}, bare::NTuple{2,Union{SFD,DECIM}}) = begin
+STB(symb::NTuple{2,Symbol},
+    bare::NTuple{2,Union{SFD,DECIM}} = (zero(SFD), zero(SFD))) = begin
     STB(SUB(symb[1], bare[1]), SUB(symb[2], bare[2]))
 end
 
