@@ -29,7 +29,7 @@ Suppose initially one buys `0.01 BTC` for `980 USD`; one's tracked balance is th
 ```julia
 julia> using InformalDAX
 
-julia> myBTCBal = STB(SUB(:BTC, 1//100), SUB(:USD, 980))
+julia> myBTCBal = STB((:BTC, :USD), (1//100, 980))  # STB is a Single Tracked Balance object
         +0.0100000000    BTC
               +980.00    USD
 ```
@@ -38,12 +38,12 @@ Then, out of this balance, `0.001 BTC` gets transfered away. The remaining track
 and tracked taken balances are:
 
 ```julia
-julia> transfer = SUB(:BTC, 1//1000)
+julia> xfer = SUB(:BTC, 1//1000)                    # SUB is a Single Untracked Balance object
         +0.0010000000    BTC
 
-julia> df, tk = myBTCBal - transfer;
+julia> myBTCBal, xfer = myBTCBal - xfer;            # xfer will go from an SUB to an STB
 
-julia> [ display(i) for i in (df, tk) ];
+julia> [ display(i) for i in (myBTCBal, xfer) ];
         +0.0090000000    BTC
               +882.00    USD
 
@@ -52,12 +52,12 @@ julia> [ display(i) for i in (df, tk) ];
 ```
 
 Meaning the retained balance of `0.009 BTC` retained `882 USD` in fiat purchase price—the data
-in `df`; and the taken amount of `0.001 BTC` represents a fraction worth of `98 USD` of its
-purchase price in fiat currency—the data in `tk`.
+in `myBTCBal`; and the taken amount of `0.001 BTC` represents a fraction worth of `98 USD` of
+its purchase price in fiat currency—the data in `xfer`.
 
 If the tracked crypto amount is later sold back into the fiat currency (USD in this example),
 any realized gains or losses become immediately visible through the tracked fiat amount in the
-`tk::STB` object.
+`xfer::STB` object.
 
 Additionally, since exchanges typically display crypto balances converted to fiat at market
 prices, knowing the corresponding tracked fiat amount of your crypto holdings can support more
