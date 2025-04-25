@@ -134,7 +134,7 @@ Initially, one buys `0.01 BTC` for `980 USD`; one's tracked balance is therefore
 ```julia
 julia> using InformalDAX
 
-julia> myBTCBal = STB( SUB(:BTC, SFD(1//100)), SUB(:USD, SFD(980)) )
+julia> myBTCBal = STB(SUB(:BTC, 1//100), SUB(:USD, 980))
         +0.0100000000    BTC
               +980.00    USD
 ```
@@ -143,7 +143,7 @@ Then, out of this balance, `0.001 BTC` gets transfered away. The remaining track
 and tracked taken balances are:
 
 ```julia
-julia> transfer = SUB(:BTC, SFD(1//1000))
+julia> transfer = SUB(:BTC, 1//1000)
         +0.0010000000    BTC
 
 julia> df, tk = myBTCBal - transfer;
