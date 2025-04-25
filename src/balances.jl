@@ -185,6 +185,42 @@ function Base.show(io::IO, ::MIME"text/plain", x::STB)
 end
 
 
+#--------------------------------------------------------------------------------------------------#
+#                                    Multiple, Tracked Balance.                                    #
+#--------------------------------------------------------------------------------------------------#
+
+"""
+`struct MTB <: MulTracked`\n
+Multiple, Tracked Balance.
+"""
+struct MTB <: MulTracked
+    Mult::Dict{NTuple{2,Symbol},STB}
+    MTB(x::STB) = new(Dict(x()))
+    function MTB(x::STB...)
+        𝑐 = Set([symb(i)[1] for i in x])
+        𝑓 = Set([symb(i)[2] for i in x])
+        @assert(length([𝑓...]) == 1, "Multiple tracking fiats!")
+        new(Dict([i() for i in x]))
+    end
+end
+
+# export
+export MTB
+
+# bare function to return the "bare" balances
+bare(x::MTB) = [i()[2] for i in x]
+
+# symb function to return the currency symbol
+symb(x::MTB) = [i()[1] for i in x]
+
+# Functor returns currency => balance Pair
+(x::MTB)() = Dict([i() for i in x])
+
+# show/display
+function Base.show(io::IO, ::MIME"text/plain", x::MTB)
+    print(x.Mult)
+end
+
 
 
 #==================================================================================================#
