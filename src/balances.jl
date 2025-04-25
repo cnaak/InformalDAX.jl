@@ -87,6 +87,11 @@ struct STB <: UniTracked
     end
 end
 
+# outer constructors
+STB(symb::NTuple{2,Symbol}, bare::NTuple{2,Union{SFD,DECIM}}) = begin
+    STB(SUB(symb[1], bare[1]), SUB(symb[2], bare[2]))
+end
+
 # export
 export STB
 
@@ -129,7 +134,7 @@ ratio of purchasing fiat currency.
 
 ## Example:
 
-Initially, one buys `0.01 BTC` for `980 USD`; one's tracked balance is therefore:
+Suppose initially one buys `0.01 BTC` for `980 USD`; one's tracked balance is therefore:
 
 ```julia
 julia> using InformalDAX
