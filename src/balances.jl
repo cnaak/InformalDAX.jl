@@ -3,6 +3,7 @@
 #--------------------------------------------------------------------------------------------------#
 
 import Base: show, +, -, *
+import Base: keys
 
 
 #--------------------------------------------------------------------------------------------------#
@@ -43,8 +44,11 @@ isFiat(x::SUB) = x.cur in Currencies.allsymbols()
 # Returns true if x.cur is not a fiat currency
 isCryp(x::SUB) = !isFiat(x)
 
+# Pretty string function
+pretty(x::SUB) = @sprintf("%+*.*f %6s", 11 + decs(x), decs(x), bare(x), name(x))
+
 # export
-export SUB, bare, symb, name, decs, isFiat, isCryp
+export SUB, bare, symb, name, decs, isFiat, isCryp, pretty
 
 # Addition
 +(x::SUB, y::SUB) = begin
@@ -64,7 +68,7 @@ end
 
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::SUB)
-    print(@sprintf("%+21.*f %6s", decs(x), bare(x), name(x)))
+    print(pretty(x))
 end
 
 
@@ -117,6 +121,9 @@ isFiat(x::STB) = x.cryp.cur in Currencies.allsymbols()
 
 # Returns true if x.cryp.cur is not a fiat currency
 isCryp(x::STB) = !isFiat(x)
+
+# Pretty string function
+pretty(x::STB) = @sprintf("%s (%s)", pretty(x.cryp), pretty(x.fiat))
 
 # Addition
 +(x::STB, y::STB) = begin
@@ -181,8 +188,7 @@ end
 
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::STB)
-    display(x.cryp)
-    display(x.fiat)
+    print(pretty(x))
 end
 
 
@@ -213,6 +219,20 @@ end
 # export
 export MTB
 
+# fiat
+fiat(x::MTB) = [keys(x.Mult)...][1][2]
+
+# keys - return the keys of `x` as a sorted vector of keys, the first always being the fiat one
+function keys(x::MTB)
+    f = fiat(x)
+    k = [keys(x.Mult)...]
+    fid = findfirst((f, f), k)
+    ret = [popat!(k,fid),]
+    return append!(ret, sort(k))
+end
+
+export fiat
+
 # bare function to return the "bare" balances
 bare(x::MTB) = [i()[2] for i in x]
 
@@ -222,9 +242,18 @@ symb(x::MTB) = [i()[1] for i in x]
 # Functor returns currency => balance Pair
 (x::MTB)() = Dict([i() for i in x])
 
+# Pretty string function
+pretty(x::MTB) = begin
+    ret = String[]
+    for 𝑘 in keys(x)
+        append!(ret, pretty(x.Mult[𝑘]))
+    end
+    return join(ret, "\n")
+end
+
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::MTB)
-    print(x.Mult)
+    print(pretty(x))
 end
 
 
