@@ -116,16 +116,20 @@ end
 
 # Subtraction
 """
+# InformalDAX's "tracked" subtraction of crypto assets
+
 `-(x::STB, y::SUB)::Tuple{STP,STP}`\n
 Tracked subtraction \$x - y\$ that returns a `(result, taken)` tuple, where `result` is the
 resulting tracked subtraction, and `taken` is the tracked taken amount _implied_ by `y` (an
 untracked balance).
 
-# Example:
+## Example:
 
 Initially, one buys `0.01 BTC` for `980 USD`; one's tracked balance is therefore:
 
 ```julia
+julia> using InformalDAX
+
 julia> myBTCBal = STB( SUB(:BTC, SFD(1//100)), SUB(:USD, SFD(980)) )
         +0.0100000000    BTC
               +980.00    USD
