@@ -1,5 +1,5 @@
 #--------------------------------------------------------------------------------------------------#
-#                                  FixedPoint number for finances                                  #
+#            finance.jl - FixedPoint number for crypto finances with 10 decimal places             #
 #--------------------------------------------------------------------------------------------------#
 
 SFD =  FixedDecimal{Int64,10}   # from -922337203.6854775808
@@ -9,6 +9,7 @@ SFD =  FixedDecimal{Int64,10}   # from -922337203.6854775808
 
 INPUTS = Union{SFD, Rational, Integer}
 
+# export
 export SFD, INPUTS
 
 

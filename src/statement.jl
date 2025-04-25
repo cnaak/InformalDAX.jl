@@ -1,4 +1,9 @@
+#--------------------------------------------------------------------------------------------------#
+#                       statement.jl - InformalDAX statement reading/parsing                       #
+#--------------------------------------------------------------------------------------------------#
+
 import Base: show
+
 
 #--------------------------------------------------------------------------------------------------#
 #                                       GenericStatementLine                                       #
@@ -27,6 +32,7 @@ struct GenericStatementLine <: AbstractStatementLine
     end
 end
 
+# export
 export GenericStatementLine
 
 function Base.show(io::IO, ::MIME"text/plain", gl::GenericStatementLine)
@@ -155,6 +161,7 @@ struct ParsedStmtLine <: AbstractStatementLine
     end
 end
 
+# export
 export ParsedStmtLine
 
 function Base.show(io::IO, ::MIME"text/plain", pl::ParsedStmtLine)

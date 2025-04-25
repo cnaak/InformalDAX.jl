@@ -1,5 +1,10 @@
-# Top-Level Informal_DAX supertype
-# -------------------------------
+#--------------------------------------------------------------------------------------------------#
+#                             abstract.jl - InformalDAX type hyerarchy                             #
+#--------------------------------------------------------------------------------------------------#
+
+#--------------------------------------------------------------------------------------------------#
+#                                 Top-Level Informal_DAX supertype                                 #
+#--------------------------------------------------------------------------------------------------#
 
 """
 `abstract type Informal_DAX <: Any end`\n
@@ -7,9 +12,13 @@ Top-level Informal_DAX supertype.
 """
 abstract type Informal_DAX <: Any end
 
+# export
+export Informal_DAX
 
-# Second-level abstract types
-# ---------------------------
+
+#--------------------------------------------------------------------------------------------------#
+#                                   Second-level abstract types                                    #
+#--------------------------------------------------------------------------------------------------#
 
 """
 `abstract type AbstractStatement <: Informal_DAX end`\n
@@ -29,9 +38,13 @@ Second-level Balance abstract supertype.
 """
 abstract type AbstractBalance <: Informal_DAX end
 
+# export
+export AbstractStatement, AbstractOperation, AbstractBalance
 
-# Third-level abstract types <: AbstractStatement
-# -----------------------------------------------
+
+#--------------------------------------------------------------------------------------------------#
+#                         Third-level abstract types <: AbstractStatement                          #
+#--------------------------------------------------------------------------------------------------#
 
 """
 `abstract type AbstractStatementLine <: AbstractStatement end`\n
@@ -39,9 +52,13 @@ Third-level StatementLine abstract supertype.
 """
 abstract type AbstractStatementLine <: AbstractStatement end
 
+# export
+export AbstractStatementLine
 
-# Third+ -level abstract types <: AbstractBalance
-# -----------------------------------------------
+
+#--------------------------------------------------------------------------------------------------#
+#                         Third+ -level abstract types <: AbstractBalance                          #
+#--------------------------------------------------------------------------------------------------#
 
 """
 `abstract type Untrakd <: AbstractBalance end`\n
@@ -66,5 +83,8 @@ abstract type UniTracked <: Tracked end
 Fiat-Tracked, multi balance.
 """
 abstract type MulTracked <: Tracked end
+
+# export
+export Untrakd, Tracked, UniTracked, MulTracked
 
 

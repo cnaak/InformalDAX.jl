@@ -1,5 +1,5 @@
 #--------------------------------------------------------------------------------------------------#
-#                                          User Functions                                          #
+#                               user.jl - InformalDAX user functions                               #
 #--------------------------------------------------------------------------------------------------#
 
 # RFB's fiat currency
@@ -9,6 +9,7 @@ function initStmt(prBal::MultiFTBalance = MultiFTBalance(RFBFiat))
     return prBal
 end
 
+# export
 export initStmt
 
 function rollStatement(srcFi::String, prBal::MultiFTBalance = initStmt())
@@ -48,5 +49,6 @@ function rollStatement(srcFi::String, prBal::MultiFTBalance = initStmt())
     end
 end
 
+# export
 export rollStatement
 

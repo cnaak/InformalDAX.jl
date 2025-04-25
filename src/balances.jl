@@ -1,8 +1,21 @@
-#==================================================================================================#
-#                                      FIAT-Tracking Balances                                      #
-#==================================================================================================#
+#--------------------------------------------------------------------------------------------------#
+#         balances.jl - crypto assets balances with fiat/on-ramp tracking (purchase price)         #
+#--------------------------------------------------------------------------------------------------#
 
 import Base: show, +, -
+
+
+#--------------------------------------------------------------------------------------------------#
+#                                Fiat-Untracked Crypto/Fiat Balance                                #
+#--------------------------------------------------------------------------------------------------#
+
+"""
+"""
+struct SUBal <: Untracked
+end
+
+
+
 
 
 #==================================================================================================#
@@ -40,6 +53,7 @@ function SingleFTBalance(dat::Pair{NTuple{2, Symbol}, NTuple{2, UFD}})
 end
 SingleFTBalance(that::SingleFTBalance) = SingleFTBalance(that.DAT)
 
+# export
 export SingleFTBalance
 
 function Base.show(io::IO, ::MIME"text/plain", x::SingleFTBalance)
@@ -163,6 +177,7 @@ struct MultiFTBalance <: AbstractBalance
     end
 end
 
+# export
 export MultiFTBalance
 
 function Base.show(io::IO, ::MIME"text/plain", x::MultiFTBalance)
