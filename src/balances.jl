@@ -25,6 +25,12 @@ end
 # bare function to return the "bare" balance
 bare(x::SUB) = x.bal
 
+# name function to return the currency "name"
+name(x::SUB) = string(x.cur)
+
+# decs function to return the currency number of decimal places
+decs(x::SUB) = isFiat(x) ? Currencies.unit(x.cur) : 10
+
 # export
 export SUB
 
@@ -34,14 +40,21 @@ isFiat(x::SUB) = x.cur in Currencies.allsymbols()
 # Returns true if x.cur is not a fiat currency
 isCryp(x::SUB) = !isFiat(x)
 
+# Addition
 +(x::SUB, y::SUB) = begin
     @assert(x.cur == y.cur, "Can't add different currency balances!")
     return SUB(x.cur, x.bal + y.bal)
 end
 
+# Subtraction
 -(x::SUB, y::SUB) = begin
     @assert(x.cur == y.cur, "Can't sub different currency balances!")
     return SUB(x.cur, x.bal - y.bal)
+end
+
+# show/display
+function Base.show(io::IO, ::MIME"text/plain", x::SUB)
+    print(@sprintf("%+21.*f %6s", decs(x), bare(x), name(x)))
 end
 
 
