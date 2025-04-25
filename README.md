@@ -1,19 +1,20 @@
 # InformalDAX
 
-Unofficial module to process `NovaDAX`'s crypto exchange statements in Julia.
+An unofficial Julia module for processing cryptocurrency exchange statements from NovaDAX.
 
-The author has no employment nor representative arrangement with the aforementioned exchange.
+The author has no affiliation, employment, or representative agreement with the aforementioned exchange.
 
 ## Description
 
-Personal use module written in Julia for performing custom calculations based on `NovaDAX`'s
-crypto exchange statements, made available under the MIT license: WITHOUT WARRANTY OF ANY KIND
-(see full LICENSE for terms), and PROVIDED "AS IS", so don't expect fixes or features to be
-implemented upon request or issue opening.
+This is a personal-use Julia module designed for custom calculations based on statements from
+the NovaDAX cryptocurrency exchange. It is released under the MIT license **without any
+warranty** (see the full LICENSE for terms), and is provided **"as is"**—so please don't expect
+bug fixes or feature additions upon opening issues or making requests.
 
-It is author's first financial package, that serves custom purposes, including getting
-acquainted with financial programming and it's specialized binary quantity types in Julia, by
-means of `FixedPointDecimals.jl`.
+This is the author's first foray into financial programming, created for personal
+experimentation and exploration. It serves to handle specific needs, such as learning about
+financial data processing and working with specialized binary quantity types in Julia via
+[`FixedPointDecimals.jl`](https://github.com/JuliaMath/FixedPointDecimals.jl).
 
 ## Selected Features
 
@@ -54,20 +55,19 @@ Meaning the retained balance of `0.009 BTC` retained `882 USD` in fiat purchase 
 in `df`; and the taken amount of `0.001 BTC` represents a fraction worth of `98 USD` of its
 purchase price in fiat currency—the data in `tk`.
 
-Suppose the taken amout is sold back to the tracked fiat currency, `USD` in the example, then
-realized losses or profits are easily identifiable from the fiat tracked amount in `tk`.
+If the tracked crypto amount is later sold back into the fiat currency (USD in this example),
+any realized gains or losses become immediately visible through the tracked fiat amount in the
+`tk::STB` object.
 
-Moreover, as exchanges usually display crypto balances in market-price fiats, having knowledge
-of the corresponding tracked amount of one's cripto currency balances, aids in trade
-decision-making, since eventual losses or profits become far more evident.
-
+Additionally, since exchanges typically display crypto balances converted to fiat at market
+prices, knowing the corresponding tracked fiat amount of your crypto holdings can support more
+informed trading decisions—making potential profits or losses much more evident.
 
 ## Author
 
 C. Naaktgeboren
 
 `NaaktgeborenC <dot!> PhD {at!} gmail [dot!] com`
-
 
 ## License
 
