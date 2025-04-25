@@ -10,12 +10,39 @@ import Base: show, +, -
 #--------------------------------------------------------------------------------------------------#
 
 """
+`struct SUB <: Untrakd`\n
+Single, Untracked Balance.
 """
-struct SUBal <: Untracked
+struct SUB <: Untrakd
+    cur::Symbol
+    bal::SFD
+    SUB(CUR::Symbol, BAL::SFD = zero(SFD)) = new(CUR, BAL)
 end
 
+# Functor returns currency => balance Pair
+(x::SUB)() = x.cur => x.bal
 
+# bare function to return the "bare" balance
+bare(x::SUB) = x.bal
 
+# export
+export SUB
+
+# Returns true if x.cur is a fiat currency
+isFiat(x::SUB) = x.cur in Currencies.allsymbols()
+
+# Returns true if x.cur is not a fiat currency
+isCryp(x::SUB) = !isFiat(x)
+
++(x::SUB, y::SUB) = begin
+    @assert(x.cur == y.cur, "Can't add different currency balances!")
+    return SUB(x.cur, x.bal + y.bal)
+end
+
+-(x::SUB, y::SUB) = begin
+    @assert(x.cur == y.cur, "Can't sub different currency balances!")
+    return SUB(x.cur, x.bal - y.bal)
+end
 
 
 #==================================================================================================#
@@ -27,28 +54,28 @@ end
 Rolling, fiat-tracking, single-currency balance.
 """
 struct SingleFTBalance <: AbstractBalance
-    DAT::Pair{NTuple{2, Symbol}, NTuple{2, UFD}}
+    DAT::Pair{NTuple{2, Symbol}, NTuple{2, SFD}}
     # Inner (validating) constructors
     function SingleFTBalance(fia::Symbol)
         @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
-        new((fia, fia) => (zero(UFD), zero(UFD)))
+        new((fia, fia) => (zero(SFD), zero(SFD)))
     end
     function SingleFTBalance(cur::Symbol, fia::Symbol)
         @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
-        new((cur, fia) => (zero(UFD), zero(UFD)))
+        new((cur, fia) => (zero(SFD), zero(SFD)))
     end
-    function SingleFTBalance(fia::Symbol, bal::INPUTS)
+    function SingleFTBalance(fia::Symbol, bal::DECIM)
         @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
-        new((fia, fia) => (UFD(SFD(bal)), UFD(SFD(bal))))
+        new((fia, fia) => (SFD(SFD(bal)), SFD(SFD(bal))))
     end
-    function SingleFTBalance(cur::Symbol, fia::Symbol, bal::NTuple{2,INPUTS})
+    function SingleFTBalance(cur::Symbol, fia::Symbol, bal::NTuple{2,DECIM})
         @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
-        new((cur, fia) => (UFD(SFD(bal[1])), UFD(SFD(bal[2]))))
+        new((cur, fia) => (SFD(SFD(bal[1])), SFD(SFD(bal[2]))))
     end
 end
 
 # Outer constructors
-function SingleFTBalance(dat::Pair{NTuple{2, Symbol}, NTuple{2, UFD}})
+function SingleFTBalance(dat::Pair{NTuple{2, Symbol}, NTuple{2, SFD}})
     SingleFTBalance(dat[1][1], dat[1][2], dat[2])
 end
 SingleFTBalance(that::SingleFTBalance) = SingleFTBalance(that.DAT)
@@ -76,7 +103,7 @@ function +(x::SingleFTBalance, y::SingleFTBalance)
     )
 end
 
-function +(x::SingleFTBalance, y::NTuple{2,INPUTS})
+function +(x::SingleFTBalance, y::NTuple{2,DECIM})
     x + SingleFTBalance(x.DAT[1]..., y)
 end
 
@@ -86,7 +113,7 @@ end
 function -(x::SingleFTBalance, y::SingleFTBalance)
     @assert(x.DAT[1][1] == y.DAT[1][1], "Can't sub different currencies!")
     @assert(x.DAT[2][1] >= y.DAT[2][1], "Can't take more than it has!")
-    if x.DAT[2][1] == zero(UFD)
+    if x.DAT[2][1] == zero(SFD)
         return x
     else
         nwBal = x.DAT[2][1] - y.DAT[2][1]
@@ -98,7 +125,7 @@ function -(x::SingleFTBalance, y::SingleFTBalance)
     end
 end
 
-function -(x::SingleFTBalance, y::INPUTS)
+function -(x::SingleFTBalance, y::DECIM)
     x - SingleFTBalance(x.DAT[1]..., (y, x.DAT[2][2]))
 end
 
@@ -112,25 +139,25 @@ end
 Rolling, fiat-tracking, multi-currency balance.
 """
 struct MultiFTBalance <: AbstractBalance
-    DAT::Dict{NTuple{2, Symbol}, NTuple{2, UFD}}
+    DAT::Dict{NTuple{2, Symbol}, NTuple{2, SFD}}
     # Inner (validating) constructors
     function MultiFTBalance(fia::Symbol)
         @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
-        dat = Dict((fia, fia) => (zero(UFD), zero(UFD)))
+        dat = Dict((fia, fia) => (zero(SFD), zero(SFD)))
         new(dat)
     end
-    function MultiFTBalance(fia::Symbol, bal::INPUTS)
+    function MultiFTBalance(fia::Symbol, bal::DECIM)
         @assert(fia in Currencies.allsymbols(), "Invalid fiat: \"$(fia)\"")
-        dat = Dict((fia, fia) => (UFD(SFD(bal)), UFD(SFD(bal))))
+        dat = Dict((fia, fia) => (SFD(SFD(bal)), SFD(SFD(bal))))
         new(dat)
     end
-    function MultiFTBalance(cry::Symbol, fia::Symbol, crb::INPUTS, fib::INPUTS)
+    function MultiFTBalance(cry::Symbol, fia::Symbol, crb::DECIM, fib::DECIM)
         @assert(!(cry in Currencies.allsymbols()), "Invalid crypto: \"$(cry)\"")
         @assert(  fia in Currencies.allsymbols(),  "Invalid fiat: \"$(fia)\"")
-        dat = Dict((cry, fia) => (UFD(SFD(crb)), UFD(SFD(fib))))
+        dat = Dict((cry, fia) => (SFD(SFD(crb)), SFD(SFD(fib))))
         new(dat)
     end
-    function MultiFTBalance(dat::Dict{NTuple{2, Symbol}, NTuple{2, UFD}})
+    function MultiFTBalance(dat::Dict{NTuple{2, Symbol}, NTuple{2, SFD}})
         tSet = Set([ 𝑘[2] for 𝑘 in keys(dat) ])
         @assert(length(tSet) == 1, "Multiple tracking fiats!")
         tFia = [tSet...][1]
@@ -141,7 +168,7 @@ struct MultiFTBalance <: AbstractBalance
         end
         for 𝑘 in keys(dat)
             # More implied assertions
-            dat[𝑘] = Tuple([ UFD(SFD(i)) for i in dat[𝑘] ])
+            dat[𝑘] = Tuple([ SFD(SFD(i)) for i in dat[𝑘] ])
         end
         new(dat)
     end
