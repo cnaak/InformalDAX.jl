@@ -227,11 +227,13 @@ end
 
 # outer constructors
 function MTB(s::Vector{NTuple{2,Symbol}}, b::Vector{NTuple{2,SFD}})
-    # Note that input args are functor's outputs, for copy-construction
     @assert(length(s) == length(b), "Mismatching argument lengths!")
     𝑠 = tuple([STB(s[i], b[i]) for i in 1:length(s)]...)
     MTB(𝑠...)
 end
+
+# Functor output's outer (copy) constructor
+MTB(𝑝::Pair{Vector{NTuple{2,Symbol}}, Vector{NTuple{2,SFD}}}) = MTB(𝑝...)
 
 # export
 export MTB
