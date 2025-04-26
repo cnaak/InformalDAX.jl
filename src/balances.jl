@@ -225,8 +225,25 @@ struct MTB <: MulTracked
     end
 end
 
+# outer constructors
+function MTB(s::Vector{NTuple{2,Symbol}}, b::Vector{NTuple{2,SFD}})
+    # Note that input args are functor's outputs, for copy-construction
+    @assert(length(s) == length(b), "Mismatching argument lengths!")
+    𝑠 = tuple([STB(s[i], b[i]) for i in 1:length(s)]...)
+    MTB(𝑠...)
+end
+
 # export
 export MTB
+
+# bare function to return the "bare" balance
+bare(x::MTB) = collect(bare(x.Mult[i]) for i in keys(x))
+
+# symb function to return the currency symbol
+symb(x::MTB) = collect(symb(x.Mult[i]) for i in keys(x))
+
+# Functor returns currency => balance Pair
+(x::MTB)() = symb(x) => bare(x)
 
 # fiat
 fiat(x::MTB) = [keys(x.Mult)...][1][2]
@@ -261,22 +278,22 @@ end
 # Addition
 +(x::MTB, y::STB) = begin
     @assert(fiat(x) == symb(y.fiat), "Can't operate on different fiat trackings!")
-    # TODO: FIX: Work in copy!!
+    𝑥 = MTB(x())
     if symb(y) in keys(x)
-        x.Mult[symb(y)] += y
+        𝑥.Mult[symb(y)] += y
     else
-        x.Mult[symb(y)] = y
+        𝑥.Mult[symb(y)] = y
     end
-    return x
+    return 𝑥
 end
 
 # Subtraction
 -(x::MTB, y::SUB) = begin
-    # TODO: FIX: Work in copy!!
+    𝑥 = MTB(x())
     if (symb(y), fiat(x)) in keys(x) 
-        x.Mult[(symb(y), fiat(x))], taken = x.Mult[(symb(y), fiat(x))] - y
+        𝑥.Mult[(symb(y), fiat(x))], taken = 𝑥.Mult[(symb(y), fiat(x))] - y
     end
-    return x, taken
+    return 𝑥, taken
 end
 
 # show/display
