@@ -162,7 +162,7 @@ function 𝑜Sell(sBal::MTB; pay::SUB, rec::SUB, fee::SUB)::Tuple{MTB,SUB,SUB}
     @assert(isFiat(fee), "Sale with crypto fee is unimplemented!")
     sBal, PAY = sBal - pay      # Computes payment tracking
     REC = rec - fee
-    loss, prof = REC > PAY.fiat ? (zero(SFD), REC - PAY.fiat) : (PAY.fiat - REC, zero(SFD))
+    loss, prof = REC > PAY.fiat ? (SUB(symb(fee)), REC - PAY.fiat) : (PAY.fiat - REC, SUB(symb(fee)))
     return (sBal + STB(REC, REC), loss, prof)
 end
 
