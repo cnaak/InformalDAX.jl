@@ -150,7 +150,7 @@ to render `x.cryp`'s balance non-negative.
 """
 function abs(x::STB)::STB
     if x.cryp.bal < zero(SFD)
-        return STB(symb(x), (-i for i in bare(x)))
+        return STB(symb(x), tuple((-i for i in bare(x))))
     else
         return x
     end
