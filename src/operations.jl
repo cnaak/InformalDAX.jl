@@ -139,6 +139,24 @@ Keyword args are:
 
 Returns the updated rolling tracked statement balance, as in the following:
 
+```julia
+julia> sBal = 𝑜Init()
+        +0.0000000000    BRL (        +0.00 BRL)
+
+julia> sBal = 𝑜Deposit(sBal, SUB(:BRL, 2000))
+     +2000.0000000000    BRL (     +2000.00 BRL)
+
+julia> sBal = 𝑜Buy(sBal, pay=SUB(:BRL, 199997//100),
+                         rec=SUB(:ETH, 234//1000),
+                         fee=SUB(:ETH, 234//1000000))
+        +0.0300000000    BRL (        +0.03 BRL)
+        +0.2337660000    ETH (     +1999.97 BRL)
+
+julia> sBal = 𝑜Sell(sBal, pay=SUB(:ETH, 134//1000),
+                          rec=SUB(:BRL, 5010),
+                          fee=SUB(:BRL, 10))
+
+```
 """
 function 𝑜Sell(sBal::MTB; pay::SUB, rec::SUB, fee::SUB)::Tuple{MTB,SUB,SUB}
     @assert(isFiat(fee), "Sale with crypto fee is unimplemented!")
