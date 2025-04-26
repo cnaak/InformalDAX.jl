@@ -17,7 +17,10 @@ Single, Untracked Balance.
 struct SUB <: Untrakd
     cur::Symbol
     bal::SFD
-    SUB(CUR::Symbol, BAL::SFD = zero(SFD)) = new(CUR, BAL)
+    function SUB(CUR::Symbol, BAL::SFD = zero(SFD))
+        @assert(BAL >= zero(SFD), "InformalDAX does not operate with negative balances!")
+        new(CUR, BAL)
+    end
 end
 
 # Outer constructors
@@ -137,41 +140,10 @@ function pretty(x::STB)
     @sprintf("%s (%s)", unipre(x.cryp), pretty(x.fiat))
 end
 
-# Abs
-"""
-# InformalDAX's "tracked" addition of crypto assets
-
-`abs(x::STB)::STB`\n
-Returns a crypto-based absolute valued `x` without changing the implied exchange rate, even if
-it's somehow negative.
-
-Put differently, `abs(x::STB)` either flips none or both signs (of `x.cryp` and `x.fiat`), so as
-to render `x.cryp`'s balance non-negative.
-"""
-function abs(x::STB)::STB
-    if x.cryp.bal < zero(SFD)
-        return STB(symb(x), tuple((-i for i in bare(x))))
-    else
-        return x
-    end
-end
-
 # Addition
-"""
-# InformalDAX's "tracked" addition of crypto assets
-
-`+(x::STB, y::STB)::Tuple{STB,STB}`\n
-Tracked addition \$x + y\$ that returns a `(result, filled)` tuple, where `result` is the
-resulting tracked addition, and `filled` is the tracked added amount based on `y`. If
-`y.cryp.bal` is negative, then this is equivalent to calling `x - abs(y)`.
-"""
-+(x::STB, y::STB)::Tuple{STB,STB} = begin
++(x::STB, y::STB) = begin
     @assert(symb(x) == symb(y), "Can't add different tracking pair balances!")
-    if y.cryp.bal < zero(SFD)
-        return x - abs(y)
-    else
-        return (STB(x.cryp + y.cryp, x.fiat + y.fiat), y)
-    end
+    STB(x.cryp + y.cryp, x.fiat + y.fiat)
 end
 
 # Subtraction
@@ -215,7 +187,6 @@ its purchase price in fiat currency—the data in `xfer`.
 """
 -(x::STB, y::SUB)::Tuple{STB,STB} = begin
     @assert(symb(x)[1] == symb(y), "Can't sub different tracking pair balances!")
-    ### @assert(bare(x)[1] >= bare(y), "Can't take more than it has with tracking!")
     dif = x.cryp - y                    # the difference
     r_d = bare(dif) / bare(x.cryp)      # the 0 <= difference ratio <= 1
     trk = r_d * x.fiat                  # the tracked remaining fiat
