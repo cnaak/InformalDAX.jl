@@ -49,7 +49,7 @@ pretty(x::SUB) = @sprintf("%+*.*f %6s", 11 + decs(x), decs(x), bare(x), name(x))
 unipre(x::SUB) = @sprintf("%+21.10f %6s", bare(x), name(x))
 
 # export
-export SUB, bare, symb, name, decs, isFiat, isCryp, pretty
+export SUB, bare, symb, name, decs, isFiat, isCryp
 
 # Addition
 +(x::SUB, y::SUB) = begin
@@ -152,8 +152,7 @@ Suppose initially one buys `0.01 BTC` for `980 USD`; one's tracked balance is th
 julia> using InformalDAX
 
 julia> myBTCBal = STB((:BTC, :USD), (1//100, 980))  # STB is a Single Tracked Balance object
-        +0.0100000000    BTC
-              +980.00    USD
+        +0.0100000000    BTC (      +980.00    USD)
 ```
 
 Then, out of this balance, `0.001 BTC` gets transfered away. The remaining tracked (adjusted)
@@ -165,13 +164,9 @@ julia> xfer = SUB(:BTC, 1//1000)                    # SUB is a Single Untracked 
 
 julia> myBTCBal, xfer = myBTCBal - xfer;            # Updates `myBTCBal` and adds
                                                     # tracking info to `xfer`
-
 julia> [ display(i) for i in (myBTCBal, xfer) ];
-        +0.0090000000    BTC
-              +882.00    USD
-
-        +0.0010000000    BTC
-               +98.00    USD
+        +0.0090000000    BTC (      +882.00    USD)
+        +0.0010000000    BTC (       +98.00    USD)
 ```
 
 Meaning the retained balance of `0.009 BTC` retained `882 USD` in fiat purchase price—the data
