@@ -244,15 +244,6 @@ end
 
 export fiat
 
-# bare function to return the "bare" balances
-bare(x::MTB) = [i()[2] for i in x]
-
-# symb function to return the currency symbol
-symb(x::MTB) = [i()[1] for i in x]
-
-# Functor returns currency => balance Pair
-(x::MTB)() = Dict([i() for i in x])
-
 # Pretty string function
 pretty(x::MTB) = begin
     ret = String[]
@@ -262,11 +253,23 @@ pretty(x::MTB) = begin
     return join(ret, "\n")
 end
 
+# Addition
++(x::MTB, y::STB) = begin
+    @assert(fiat(x) == symb(y.fiat), "Can't operate on different fiat trackings!")
+    if symb(y) in keys(x)
+        x.Mult[symb(y)] += y
+    else
+        x.Mult[symb(y)] = y
+    end
+    return x
+end
+
+# Subtraction
+
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::MTB)
     print(pretty(x))
 end
-
 
 
 #==================================================================================================#
