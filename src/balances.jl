@@ -256,6 +256,7 @@ end
 # Addition
 +(x::MTB, y::STB) = begin
     @assert(fiat(x) == symb(y.fiat), "Can't operate on different fiat trackings!")
+    # TODO: FIX: Work in copy!!
     if symb(y) in keys(x)
         x.Mult[symb(y)] += y
     else
@@ -265,6 +266,13 @@ end
 end
 
 # Subtraction
+-(x::MTB, y::SUB) = begin
+    # TODO: FIX: Work in copy!!
+    if (symb(y), fiat(x)) in keys(x) 
+        x.Mult[(symb(y), fiat(x))], taken = x.Mult[(symb(y), fiat(x))] - y
+    end
+    return x, taken
+end
 
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::MTB)
