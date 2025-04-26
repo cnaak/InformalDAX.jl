@@ -2,7 +2,7 @@
 #         balances.jl - crypto assets balances with fiat/on-ramp tracking (purchase price)         #
 #--------------------------------------------------------------------------------------------------#
 
-import Base: show, +, -, *, abs
+import Base: show, +, -, *, ==, isless
 import Base: keys
 
 
@@ -76,8 +76,17 @@ end
 *(x::SUB, y::DECIM) = SUB(x.cur, x.bal * y)
 *(y::DECIM, x::SUB) = x * y
 
-# Abs
-abs(x::SUB) = SUB(symb(x), abs(bare(x)))
+# isless
+isless(x::SUB, y::SUB) = begin
+    @assert(symb(x) == symb(y), "Can't order different currencies without exchange rates!")
+    isless(bare(x), bare(y))
+end
+
+# ==
+==(x::SUB, y::SUB) = begin
+    @assert(symb(x) == symb(y), "Can't order different currencies without exchange rates!")
+    ==(bare(x), bare(y))
+end
 
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::SUB)
