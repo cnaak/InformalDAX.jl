@@ -152,9 +152,9 @@ julia> sBal = 𝑜Buy(sBal, pay=SUB(:BRL, 199997//100),
         +0.0300000000    BRL (        +0.03 BRL)
         +0.2337660000    ETH (     +1999.97 BRL)
 
-julia> sBal = 𝑜Sell(sBal, pay=SUB(:ETH, 134//1000),
-                          rec=SUB(:BRL, 5010),
-                          fee=SUB(:BRL, 10))
+julia> sBal, 𝑙, 𝑝 = 𝑜Sell(sBal, pay=SUB(:ETH, 134//1000),
+                                rec=SUB(:BRL, 5010),
+                                fee=SUB(:BRL, 10));
 
 ```
 """
