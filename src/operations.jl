@@ -96,7 +96,7 @@ On-Ramp purchase with fee.
 Keyword args are:
 - `pay::SUB` is the (positive) fiat amount payed as a Single Untracked Balance;
 - `rec::SUB` is the (positive) crypto amount received as a Single Untracked Balance;
-- `fee::SUB` is the (positive) crypto or fiat amount charged as a Single Untracked Balance.
+- `fee::SUB` is the (positive) crypto amount charged as a Single Untracked Balance.
 
 Returns the updated rolling tracked statement balance, as in the following:
 
@@ -115,16 +115,41 @@ julia> sBal = 𝑜Buy(sBal, pay=SUB(:BRL, 199997//100),
 ```
 """
 function 𝑜Buy(sBal::MTB; pay::SUB, rec::SUB, fee::SUB)::MTB
-    if isCryp(fee)
-        REC = STB(rec - fee, pay)
-    else
-        REC = STB(rec, pay + fee)
-    end
+    @assert(isCryp(fee), "Purchase with fiat fee is unimplemented!")
+    REC = STB(rec - fee, pay)
     return (sBal + REC - pay)[1]
 end
 
 # export
 export 𝑜Buy
+
+
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+#                                              𝑜Sell                                               #
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+
+"""
+`𝑜Sell(sBal::MTB; pay::SUB, rec::SUB, fee::SUB)::Tuple{MTB,SUB}`\n
+Off-Ramp sale with fee and loss/profit calculation.
+
+Keyword args are:
+- `pay::SUB` is the (positive) crypto amount payed as a Single Untracked Balance;
+- `rec::SUB` is the (positive) fiat amount received as a Single Untracked Balance;
+- `fee::SUB` is the (positive) fiat amount charged as a Single Untracked Balance.
+
+Returns the updated rolling tracked statement balance, as in the following:
+
+"""
+function 𝑜Sell(sBal::MTB; pay::SUB, rec::SUB, fee::SUB)::Tuple{MTB,SUB,SUB}
+    @assert(isFiat(fee), "Sale with crypto fee is unimplemented!")
+    sBal, PAY = sBal - pay      # Computes payment tracking
+    REC = rec - fee
+    loss, prof = REC > PAY.fiat ? (zero(SFD), REC - PAY.fiat) : (PAY.fiat - REC, zero(SFD))
+    return (sBal + STB(REC, REC), loss, prof)
+end
+
+# export
+export 𝑜Sell
 
 
 
