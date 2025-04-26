@@ -156,7 +156,19 @@ julia> sBal, 𝑙, 𝑝 = 𝑜Sell(sBal, pay=SUB(:ETH, 134//1000),
                                 rec=SUB(:BRL, 5010),
                                 fee=SUB(:BRL, 10));
 
+julia> sBal
+     +5000.0300000000    BRL (     +5000.03 BRL)	# New balance has now more :BRL's
+        +0.0997660000    ETH (      +853.54 BRL)
+
+julia> [𝑙, 𝑝]
+2-element Vector{SUB}:
+         +0.00 BRL			# Loss   =    +0.00 BRL
+      +3853.57 BRL			# Profit = +3853.57 BRL
 ```
+
+Therefore, the purchase of 0.234 ETH by 1999.97 BRL (with 0.00000234 ETH fee)
+followed by the sale of 0.134 ETH by 5010 BRL (with 10 BRL fee) represented a
+net PROFIT of +3853.57 BRL.
 """
 function 𝑜Sell(sBal::MTB; pay::SUB, rec::SUB, fee::SUB)::Tuple{MTB,SUB,SUB}
     @assert(isFiat(fee), "Sale with crypto fee is unimplemented!")
@@ -168,6 +180,37 @@ end
 
 # export
 export 𝑜Sell
+
+
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+#                                            𝑜Withdraw                                             #
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+
+"""
+`𝑜Withdraw(sBal::MTB, amt::SUB)::MTB`\n
+Withdraw operation, only implemented for tracked fiat amounts. `sBal` is the rolling statement
+multi-tracked balance, and `amt` is the untracked withdrawal amount.
+
+Returns the updated rolling tracked statement balance, as in the following:
+
+```julia
+julia> sBal = 𝑜Init()
+        +0.0000000000    BRL (        +0.00 BRL)
+
+julia> sBal = 𝑜Deposit(sBal, SUB(:BRL, 2000))
+     +2000.0000000000    BRL (     +2000.00 BRL)
+
+julia> sBal = 𝑜Withdraw(sBal, SUB(:BRL, 2000))
+        +0.0000000000    BRL (        +0.00 BRL)
+```
+"""
+function 𝑜Withdraw(sBal::MTB, amt::SUB)::MTB
+    @assert(symb(amt) == fiat(sBal), "Withdrawals not in tracking fiat unimplemented!")
+    return (sBal - amt)[1]
+end
+
+# export
+export 𝑜Withdraw
 
 
 
