@@ -2,9 +2,6 @@
 #                               user.jl - InformalDAX user functions                               #
 #--------------------------------------------------------------------------------------------------#
 
-# RFB's fiat currency
-RFBFiat = :BRL
-
 function initStmt(prBal::MultiFTBalance = MultiFTBalance(RFBFiat))
     return prBal
 end
