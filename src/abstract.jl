@@ -3,17 +3,17 @@
 #--------------------------------------------------------------------------------------------------#
 
 #--------------------------------------------------------------------------------------------------#
-#                                 Top-Level Informal_DAX supertype                                 #
+#                                 Top-Level InformlDAX supertype                                 #
 #--------------------------------------------------------------------------------------------------#
 
 """
-`abstract type Informal_DAX <: Any end`\n
-Top-level Informal_DAX supertype.
+`abstract type InformlDAX <: Any end`\n
+Top-level InformlDAX supertype.
 """
-abstract type Informal_DAX <: Any end
+abstract type InformlDAX <: Any end
 
 # export
-export Informal_DAX
+export InformlDAX
 
 
 #--------------------------------------------------------------------------------------------------#
@@ -21,56 +21,56 @@ export Informal_DAX
 #--------------------------------------------------------------------------------------------------#
 
 """
-`abstract type AbstractStatement <: Informal_DAX end`\n
+`abstract type AbstractST <: InformlDAX end`\n
 Second-level Statement abstract supertype.
 """
-abstract type AbstractStatement <: Informal_DAX end
+abstract type AbstractST <: InformlDAX end
 
 """
-`abstract type AbstractOperation <: Informal_DAX end`\n
+`abstract type AbstractOP <: InformlDAX end`\n
 Second-level Operation abstract supertype.
 """
-abstract type AbstractOperation <: Informal_DAX end
+abstract type AbstractOP <: InformlDAX end
 
 """
-`abstract type AbstractBalance <: Informal_DAX end`\n
+`abstract type AbstractBL <: InformlDAX end`\n
 Second-level Balance abstract supertype.
 """
-abstract type AbstractBalance <: Informal_DAX end
+abstract type AbstractBL <: InformlDAX end
 
 # export
-export AbstractStatement, AbstractOperation, AbstractBalance
+export AbstractST, AbstractOP, AbstractBL
 
 
 #--------------------------------------------------------------------------------------------------#
-#                         Third-level abstract types <: AbstractStatement                          #
+#                         Third-level abstract types <: AbstractST                          #
 #--------------------------------------------------------------------------------------------------#
 
 """
-`abstract type AbstractStatementLine <: AbstractStatement end`\n
+`abstract type AbstractSTLn <: AbstractST end`\n
 Third-level StatementLine abstract supertype.
 """
-abstract type AbstractStatementLine <: AbstractStatement end
+abstract type AbstractSTLn <: AbstractST end
 
 # export
-export AbstractStatementLine
+export AbstractSTLn
 
 
 #--------------------------------------------------------------------------------------------------#
-#                         Third+ -level abstract types <: AbstractBalance                          #
+#                         Third+ -level abstract types <: AbstractBL                          #
 #--------------------------------------------------------------------------------------------------#
 
 """
-`abstract type Untrakd <: AbstractBalance end`\n
+`abstract type Untrakd <: AbstractBL end`\n
 Untracked single balances
 """
-abstract type Untrakd <: AbstractBalance end
+abstract type Untrakd <: AbstractBL end
 
 """
-`abstract type Tracked <: AbstractBalance end`\n
+`abstract type Tracked <: AbstractBL end`\n
 Fiat-Tracked balances.
 """
-abstract type Tracked <: AbstractBalance end
+abstract type Tracked <: AbstractBL end
 
 """
 `abstract type UniTracked <: Tracked end`\n
