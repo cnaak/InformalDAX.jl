@@ -238,6 +238,28 @@ export 𝑜Withdraw
 Send cryptocurrency operation, with fee. `sBal` is the rolling statement multi-tracked balance;
 `amt` is the sent crypto amount, `fee` is the crypto fee amount, and `oBal` is an optional
 "other" multi-tracked balance.
+
+```julia
+julia> sBal, oBal = 𝑜Init(), 𝑜Init(MTB(STB((:BRL, :BRL), (1200, 1200))));
+
+julia> sBal = 𝑜Deposit(sBal, SUB(:BRL, 2000))
+     +2000.0000000000    BRL (     +2000.00 BRL)
+
+julia> sBal = 𝑜Buy(sBal, pay=SUB(:BRL, 199997//100),
+                         rec=SUB(:ETH, 234//1000),
+                         fee=SUB(:ETH, 234//1000000))
+        +0.0300000000    BRL (        +0.03 BRL)
+        +0.2337660000    ETH (     +1999.97 BRL)
+julia> sBal, oBal = 𝑜Send(sBal, SUB(:ETH, 1//5), SUB(:ETH, 1//200), oBal);
+
+julia> sBal
+        +0.0300000000    BRL (        +0.03 BRL)
+        +0.0287660000    ETH (      +246.11 BRL)
+
+julia> oBal
+     +1200.0000000000    BRL (     +1200.00 BRL)
+        +0.2050000000    ETH (     +1753.86 BRL)
+```
 """
 function 𝑜Send(sBal::MTB, amt::SUB, fee::SUB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}
     𝑎, 𝑏 = sBal - (amt + fee)
@@ -250,3 +272,5 @@ end
 
 # export
 export 𝑜Send
+
+
