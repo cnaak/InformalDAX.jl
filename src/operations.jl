@@ -74,6 +74,10 @@ julia> sBal = 𝑜Init()
 julia> sBal = 𝑜Deposit(sBal, SUB(:BRL, 2000))
      +2000.0000000000    BRL (     +2000.00 BRL)
 ```
+
+`𝑜Deposit` operations have the same effect as "Redeemed Bonus" transactions.
+
+FOR THE MULTI-BALANCE TRANSACTION, SEE 𝑜WithDraw() with reversed multi-balance arguments.
 """
 function 𝑜Deposit(sBal::MTB, amt::SUB)::MTB
     @assert(symb(amt) == fiat(sBal), "Deposits not in tracking fiat unimplemented!")
@@ -113,6 +117,8 @@ julia> sBal = 𝑜Buy(sBal, pay=SUB(:BRL, 199997//100),
         +0.0300000000    BRL (        +0.03 BRL)
         +0.2337660000    ETH (     +1999.97 BRL)
 ```
+
+`𝑜Buy` operations have the same effect as "Convert" transactions.
 """
 function 𝑜Buy(sBal::MTB; pay::SUB, rec::SUB, fee::SUB)::MTB
     @assert(isCryp(fee), "Purchase with fiat fee is unimplemented!")
@@ -195,19 +201,18 @@ multi-tracked balance; `amt` is the untracked withdrawal amount, and `oBal` is a
 Returns a 2-tuple with the updated rolling tracked statement balances, as in the following:
 
 ```julia
-julia> sBal = 𝑜Init()
-        +0.0000000000    BRL (        +0.00 BRL)
+julia> sBal, oBal = 𝑜Init(), 𝑜Init(MTB(STB((:BRL, :BRL), (1200, 1200))));
 
 julia> sBal = 𝑜Deposit(sBal, SUB(:BRL, 2000))
      +2000.0000000000    BRL (     +2000.00 BRL)
 
-julia> sBal, wDrw = 𝑜Withdraw(sBal, SUB(:BRL, 2000));
+julia> sBal, oBal = 𝑜Withdraw(sBal, SUB(:BRL, 2000), oBal);
 
 julia> sBal
         +0.0000000000    BRL (        +0.00 BRL)
 
-julia> wDrw
-     +2000.0000000000    BRL (     +2000.00 BRL)
+julia> oBal
+     +3200.0000000000    BRL (     +3200.00 BRL)
 ```
 """
 function 𝑜Withdraw(sBal::MTB, amt::SUB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}
@@ -224,4 +229,18 @@ end
 export 𝑜Withdraw
 
 
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+#                                              𝑜Send                                               #
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
+"""
+`𝑜Send(sBal::MTB, amt::SUB, fee::SUB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}`\n
+Send cryptocurrency operation, with fee. `sBal` is the rolling statement multi-tracked balance;
+`amt` is the sent crypto amount, `fee` is the crypto fee amount, and `oBal` is an optional
+"other" multi-tracked balance.
+"""
+function 𝑜Send(sBal::MTB, amt::SUB, fee::SUB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}
+end
+
+# export
+export 𝑜Send
