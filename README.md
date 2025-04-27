@@ -1,8 +1,10 @@
 # InformalDAX
 
-An unofficial Julia module for processing cryptocurrency exchange statements from NovaDAX.
+An personal-use, unofficial Julia module for processing "Assets change statement.csv" files from
+NovaDAX.
 
-The author has no affiliation, employment, or representative agreement with the aforementioned exchange.
+The author has no affiliation, employment, or representative agreement with the aforementioned
+exchange.
 
 ## Description
 
