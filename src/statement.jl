@@ -172,7 +172,7 @@ struct ParSTLn <: AbstractSTLn
             Deno = 100
             Nume = Int64(
                 round(
-                    parse(BigFloat, join(split(m[:apr], ','))) * DENO,
+                    parse(BigFloat, join(split(m[:apr], ','))) * Deno,
                     RoundNearest,
                     digits=0
                 )
@@ -200,7 +200,7 @@ end
 export raw
 
 function Base.show(io::IO, ::MIME"text/plain", x::ParSTLn)
-    print(@sprintf("ParSTLn(%s)", repr(raw(x))))
+    print(@sprintf("ParSTLn(GenSTLn(%s))", repr(raw(x))))
 end
 
 
@@ -210,25 +210,7 @@ end
 
 # Inverse constructor
 function GenSTLn(p::ParSTLn)
-    for 𝑥 in ("", "(UTC)dat,Type,Coin,Amount,Status")
-        if p == ParSTLn((x = GenSTLn(𝑥); x)); return x; end
-    end
-    𝑑, 𝑡, 𝑐, 𝑎, 𝑜 = p()
-    dStr = @sprintf("%02d/%02d/%04d %02d:%02d:%02d",
-                    month(𝑑), day(𝑑), year(𝑑),
-                    hour(𝑑), minute(𝑑), second(𝑑))
-    if 𝑡[1] == "Fee"
-        tStr = join([𝑡[1], "for", 𝑡[2]], " ")
-    elseif 𝑡[1] == "Send"
-        tStr = join([𝑡...], " ")
-    elseif 𝑡[2] != ""
-        tStr = @sprintf("%s(%s)", 𝑡...)
-    else
-        tStr = 𝑡[1]
-    end
-    cStr = @sprintf("%s", 𝑐)
-    aStr = @sprintf("%s%.10f %s", 𝑎[1] ? "-" : "+", 𝑎[2], 𝑎[3])
-    return GenSTLn(dStr, tStr, cStr, aStr,oStr)
+    return GenSTLn(p.STML)
 end
 
 
