@@ -298,6 +298,14 @@ end
     return 𝑥
 end
 
++(x::MTB, y::MTB) = begin
+    sum = MTB(x())
+    for k in keys(y)
+        sum += y.Mult[k]
+    end
+    return sum
+end
+
 # Subtraction
 -(x::MTB, y::SUB) = begin
     @assert((symb(y), fiat(x)) in keys(x), "Can't take unowned currency from balance!")
