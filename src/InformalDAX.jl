@@ -7,7 +7,6 @@ module InformalDAX
 
 # Imports
 using Printf
-using Crayons
 using FixedPointDecimals
 using Currencies
 using Dates
