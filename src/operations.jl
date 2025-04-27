@@ -240,6 +240,12 @@ Send cryptocurrency operation, with fee. `sBal` is the rolling statement multi-t
 "other" multi-tracked balance.
 """
 function 𝑜Send(sBal::MTB, amt::SUB, fee::SUB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}
+    𝑎, 𝑏 = sBal - (amt + fee)
+    if oBal isa Nothing
+        return 𝑎, MTB(𝑏)
+    else
+        return 𝑎, oBal + 𝑏
+    end
 end
 
 # export
