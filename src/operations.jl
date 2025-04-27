@@ -67,6 +67,12 @@ end
 # Addition
 +(x::𝒐𝒑Ini, y::𝒐𝒑Ini) = 𝒐𝒑Ini(x.prev + y.prev)
 
+# show/display
+function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Ini)
+    print("Balance Initialization Operation with\n")
+    print(pretty(x.prev))
+end
+
 # export
 export 𝑜Init, 𝒐𝒑Ini
 
@@ -100,8 +106,29 @@ function 𝑜Deposit(sBal::MTB, amt::SUB)::MTB
     return sBal + dBal
 end
 
+
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+
+# 𝒐𝒑Dep object
+struct 𝒐𝒑Dep <: AbstractOP
+    amt::SUB
+    𝒐𝒑Dep(amt::SUB) = new(amt)
+end
+
+# Functor
+(x::𝒐𝒑Dep)(sBal::MTB) = 𝑜Deposit(sBal, x.amt)
+
+# Addition
++(x::𝒐𝒑Dep, y::𝒐𝒑Dep) = 𝒐𝒑Dep(x.amt + y.amt)
+
+# show/display
+function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Dep)
+    print("Deposit Operation with\n")
+    print(pretty(x.amt))
+end
+
 # export
-export 𝑜Deposit
+export 𝑜Deposit, 𝒐𝒑Dep
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
