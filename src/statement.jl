@@ -55,22 +55,24 @@ end
 #--------------------------------------------------------------------------------------------------#
 
 struct ParSTLn <: AbstractSTLn
+    STML::String
     DATE::DateTime
     TYPE::Tuple{String, String}
     COIN::Symbol
-    AMNT::Tuple{Bool, SFD, Symbol}
+    AMNT::Tuple{Bool, SFD, Symbol, Union{Tuple{SFD,Symbol},Nothing}}
     OUTC::Bool
     function ParSTLn(g::GenSTLn)
+        stml = raw(g)
         # Early exit for empty/last statement lines
         if length(g.dat) == 0
-            return new(DateTime(0, 1, 1, 0, 0, 0), ("Header", ""),
-                       :nothing, (false, zero(SFD), :nothing), false)
-        elseif (g.typ    == "Type"   || 
-                g.coi    == "Coin"   ||
-                g.amt  == "Amount" ||
+            return new(stml, DateTime(0, 1, 1, 0, 0, 0), ("Header", ""),
+                       :nothing, (false, zero(SFD), :nothing, Nothing()), false)
+        elseif (g.typ == "Type"   || 
+                g.coi == "Coin"   ||
+                g.amt == "Amount" ||
                 g.out == "Status")
-            return new(DateTime(0, 1, 1, 0, 0, 0), ("Footer", ""), 
-                       :nothing, (false, zero(SFD), :nothing), false)
+            return new(stml, DateTime(0, 1, 1, 0, 0, 0), ("Footer", ""), 
+                       :nothing, (false, zero(SFD), :nothing, Nothing()), false)
         end
         # Date parsing
         dex  = raw"^(?<MM>[0-9]{2})/(?<DD>[0-9]{2})/(?<YY>[0-9]{4})"
@@ -79,11 +81,12 @@ struct ParSTLn <: AbstractSTLn
         m    = match(rex, g.dat)
         if m isa Nothing
             return new(
+                stml,
                 DateTime(0, 1, 1, 0, 0, 0),
                 ("Header", ""),
                 :nothing,
-                (false, zero(SFD), :nothing),
-                false
+                (false, zero(SFD), :nothing, Nothing()),
+                g.out == "Success"
             )
         end
         date = DateTime(
@@ -121,7 +124,7 @@ struct ParSTLn <: AbstractSTLn
             rex  = r"R\$ ?(?<sig>[+-]?)(?<val>[0-9.,]+)"
             m    = match(rex, g.amt)
             if m isa Nothing
-                return new(date, 𝑡𝑦𝑝𝑒, coin, (false, zero(SFD), :nothing), false)
+                return new(stml, date, 𝑡𝑦𝑝𝑒, coin, (false, zero(SFD), :nothing, Nothing()), false)
             end
             sig  = m[:sig]
             val  = m[:val]
@@ -134,13 +137,15 @@ struct ParSTLn <: AbstractSTLn
                     digits=0
                 )
             )
-            amnt = (sbt, SFD(NUME//DENO), :BRL)
+            amnt = (sbt, SFD(NUME//DENO), :BRL, Nothing())
         else
             # Other parsing
-            rex  = r"^(?<sig>[+-]?)(?<val>[0-9.,]+) ?(?<cur>[A-Z]+)"
+            rex  = r"^(?<sig>[+-]?)(?<val>[0-9.,]+) ?(?<cur>[A-Z]+)(?<gra>.*)$"
             m    = match(rex, g.amt)
             if m isa Nothing
-                return new(date, 𝑡𝑦𝑝𝑒, coin, (false, zero(SFD), :nothing), false)
+                return new(date, 𝑡𝑦𝑝𝑒, coin,
+                           (false, zero(SFD), :nothing, Nothing()),
+                           g.out == "Success")
             end
             sig  = m[:sig]
             val  = m[:val]
@@ -154,12 +159,30 @@ struct ParSTLn <: AbstractSTLn
                     digits=0
                 )
             )
-            amnt = (sbt, SFD(NUME//DENO), Symbol(cur))
+            # Approx BRL parsing
+            if startswith("(≈R\$")(m[:gra])
+                rex  = r"\(≈R\$(?<apr>[0-9.,]+)\)"
+                m    = match(rex, m[:gra])
+                if m isa Nothing
+                    return new(stml, date, 𝑡𝑦𝑝𝑒, coin,
+                               (sbt, SFD(NUME//DENO), Symbol(cur), Nothing()),
+                               g.out == "Success")
+                end
+            end
+            Deno = 100
+            Nume = Int64(
+                round(
+                    parse(BigFloat, join(split(m[:apr], ','))) * DENO,
+                    RoundNearest,
+                    digits=0
+                )
+            )
+            amnt = (sbt, SFD(NUME//DENO), Symbol(cur), (SFD(Nume//Deno), :BRL))
         end
         # Outcome parsing
         outc = g.out == "Success"
         # Final assembly
-        new(date, 𝑡𝑦𝑝𝑒, coin, amnt, outc)
+        new(stml, date, 𝑡𝑦𝑝𝑒, coin, amnt, outc)
     end
 end
 
@@ -169,10 +192,15 @@ end
 # export
 export ParSTLn
 
-function Base.show(io::IO, ::MIME"text/plain", pl::ParSTLn)
-    print(@sprintf("Statement Line: (%s)\n  %s\n  %s\n  %s\n  %s",
-                   pl.OUTC ? "\u2714" : "\u2716",
-                   pl.DATE, pl.TYPE, pl.COIN, pl.AMNT))
+function raw(x::ParSTLn)
+    x.STML
+end
+
+# export
+export raw
+
+function Base.show(io::IO, ::MIME"text/plain", x::ParSTLn)
+    print(@sprintf("ParSTLn(%s)", repr(raw(x))))
 end
 
 
