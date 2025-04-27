@@ -187,11 +187,12 @@ export 𝑜Sell
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
 """
-`𝑜Withdraw(sBal::MTB, amt::SUB)::MTB`\n
+`𝑜Withdraw(sBal::MTB, amt::SUB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}`\n
 Withdraw operation, only implemented for tracked fiat amounts. `sBal` is the rolling statement
-multi-tracked balance, and `amt` is the untracked withdrawal amount.
+multi-tracked balance; `amt` is the untracked withdrawal amount, and `oBal` is an optional
+"other" multi-tracked balance.
 
-Returns the updated rolling tracked statement balance, as in the following:
+Returns a 2-tuple with the updated rolling tracked statement balances, as in the following:
 
 ```julia
 julia> sBal = 𝑜Init()
@@ -200,13 +201,23 @@ julia> sBal = 𝑜Init()
 julia> sBal = 𝑜Deposit(sBal, SUB(:BRL, 2000))
      +2000.0000000000    BRL (     +2000.00 BRL)
 
-julia> sBal = 𝑜Withdraw(sBal, SUB(:BRL, 2000))
+julia> sBal, wDrw = 𝑜Withdraw(sBal, SUB(:BRL, 2000));
+
+julia> sBal
         +0.0000000000    BRL (        +0.00 BRL)
+
+julia> wDrw
+     +2000.0000000000    BRL (     +2000.00 BRL)
 ```
 """
-function 𝑜Withdraw(sBal::MTB, amt::SUB)::MTB
+function 𝑜Withdraw(sBal::MTB, amt::SUB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}
     @assert(symb(amt) == fiat(sBal), "Withdrawals not in tracking fiat unimplemented!")
-    return (sBal - amt)[1]
+    𝑎, 𝑏 = sBal - amt
+    if oBal isa Nothing
+        return 𝑎, MTB(𝑏)
+    else
+        return 𝑎, oBal + 𝑏
+    end
 end
 
 # export
