@@ -33,6 +33,32 @@ isless(x::𝕆, y::ℙ) where {𝕆 <: AbstractOP, ℙ <: AbstractOP} = isless(x
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
 # 𝒐𝒑Ini object
+"""
+`struct 𝒐𝒑Ini <: AbstractOP`\n
+Initialization operation object, that can be used as a functor for balance initializations.
+
+Suppose at the very beginning, one opens a NovaDAX account (and therefore it's statement) with
+empty balance (the default) when having 3000 fiat units in a "BANK". This scenario can be setup
+as follows:
+
+```julia
+julia> using InformalDAX
+
+julia> a = SUB(:BRL, 3000)
+     +3000.00 BRL
+
+julia> A = MTB(STB(a, a))
+     +3000.0000000000    BRL (     +3000.00 BRL)
+
+julia> NDAX, BANK = 𝒐𝒑Ini()(), 𝒐𝒑Ini(A)();
+
+julia> NDAX
+        +0.0000000000    BRL (        +0.00 BRL)
+
+julia> BANK
+     +3000.0000000000    BRL (     +3000.00 BRL)
+```
+"""
 struct 𝒐𝒑Ini <: AbstractOP
     prev::MTB
     date::DateTime
@@ -66,14 +92,20 @@ export 𝒐𝒑Ini
 struct 𝒐𝒑Dep <: AbstractOP
     amt::SUB
     date::DateTime
-    𝒐𝒑Dep(amt::SUB; date::DateTime = now()) = new(amt, date)
+    𝒐𝒑Dep(amt::SUB; date::DateTime = now()) = begin
+        @assert(isFiat(amt), "Deposit operations must, by definition, be in fiat currency!")
+        new(amt, date)
+    end
 end
 
 # Functor with functionality
-function (x::𝒐𝒑Dep)(sBal::MTB)::MTB
-    @assert(symb(x.amt) == fiat(sBal), "Deposits not in tracking fiat unimplemented!")
+function (x::𝒐𝒑Dep)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}
     dBal = STB(x.amt, x.amt)
-    return sBal + dBal
+    if oBal isa Nothing
+        return sBal + dBal, MTB(dBal)
+    else
+        return sBal + dBal, (oBal - x.amt)[1]
+    end
 end
 
 # Addition
@@ -81,13 +113,51 @@ end
 
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Dep)
-    println("Deposit Operation with")
+    println("Fiat Deposit Operation with")
     println("   - Earliest order date ..: ", x.date)
     println("   - Deposit amount .......: ", pretty(x.amt))
 end
 
 # export
 export 𝒐𝒑Dep
+
+
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+#                                          𝒐𝒑Draw object                                           #
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+
+# 𝒐𝒑Draw object
+struct 𝒐𝒑Draw <: AbstractOP
+    amt::SUB
+    date::DateTime
+    𝒐𝒑Draw(amt::SUB; date::DateTime = now()) = begin
+        @assert(isFiat(amt), "Draw operations must, by definition, be in fiat currency!")
+        new(amt, date)
+    end
+end
+
+# Functor with fuctionality
+function (x::𝒐𝒑Draw)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}
+    a, b = sBal - x.amt
+    if oBal isa Nothing
+        return a, MTB(b)
+    else
+        return a, oBal + b
+    end
+end
+
+# Addition
++(x::𝒐𝒑Draw, y::𝒐𝒑Draw) = 𝒐𝒑Draw(x.amt + y.amt; date = x.date < y.date ? x.date : y.date)
+
+# show/display
+function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Draw)
+    println("Fiat Withdraw Operation with")
+    println("   - Earliest order date ..: ", x.date)
+    println("   - Withdrawal amount ....: ", pretty(x.amt))
+end
+
+# export
+export 𝒐𝒑Draw
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
@@ -178,10 +248,6 @@ end
 
 # export
 export 𝒐𝒑Sell
-
-
-# export
-export 𝑜Sell
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
