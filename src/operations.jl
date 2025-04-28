@@ -134,58 +134,51 @@ export 𝒐𝒑Buy
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                              𝑜Sell                                               #
+#                                          𝒐𝒑Sell object                                           #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
-"""
-`𝑜Sell(sBal::MTB; pay::SUB, rec::SUB, fee::SUB)::Tuple{MTB,SUB}`\n
-Off-Ramp sale with fee and loss/profit calculation.
+# 𝒐𝒑Sell object
+struct 𝒐𝒑Sell <: AbstractOP
+    pay::SUB
+    rec::SUB
+    fee::SUB
+    date::DateTime
+    𝒐𝒑Sell(pay::SUB, rec::SUB, fee::SUB; date::DateTime = now()) = begin
+        @assert(isCryp(pay), "Sell operations must, by definition, be payed in crypto currency!")
+        @assert(isFiat(rec), "Sell operations must, by definition, aquire fiat currency!")
+        @assert(isFiat(fee), "Purchase fee must be in crypto currency!")
+        @assert(rec.cur == fee.cur, "Receiving and fee must be in the same currency!")
+        new(pay, rec, fee, date)
+    end
+end
 
-Keyword args are:
-- `pay::SUB` is the (positive) crypto amount payed as a Single Untracked Balance;
-- `rec::SUB` is the (positive) fiat amount received as a Single Untracked Balance;
-- `fee::SUB` is the (positive) fiat amount charged as a Single Untracked Balance.
-
-Returns the updated rolling tracked statement balance, as in the following:
-
-```julia
-julia> sBal = 𝑜Init()
-        +0.0000000000    BRL (        +0.00 BRL)
-
-julia> sBal = 𝑜Deposit(sBal, SUB(:BRL, 2000))
-     +2000.0000000000    BRL (     +2000.00 BRL)
-
-julia> sBal = 𝑜Buy(sBal, pay=SUB(:BRL, 199997//100),
-                         rec=SUB(:ETH, 234//1000),
-                         fee=SUB(:ETH, 234//1000000))
-        +0.0300000000    BRL (        +0.03 BRL)
-        +0.2337660000    ETH (     +1999.97 BRL)
-
-julia> sBal, 𝑙, 𝑝 = 𝑜Sell(sBal, pay=SUB(:ETH, 134//1000),
-                                rec=SUB(:BRL, 5010),
-                                fee=SUB(:BRL, 10));
-
-julia> sBal
-     +5000.0300000000    BRL (     +5000.03 BRL)	# New balance has now more :BRL's
-        +0.0997660000    ETH (      +853.54 BRL)
-
-julia> [𝑙, 𝑝]
-2-element Vector{SUB}:
-         +0.00 BRL			# Loss   =    +0.00 BRL
-      +3853.57 BRL			# Profit = +3853.57 BRL
-```
-
-Therefore, the purchase of 0.234 ETH by 1999.97 BRL (with 0.00000234 ETH fee)
-followed by the sale of 0.134 ETH by 5010 BRL (with 10 BRL fee) represented a
-net PROFIT of +3853.57 BRL.
-"""
-function 𝑜Sell(sBal::MTB; pay::SUB, rec::SUB, fee::SUB)::Tuple{MTB,SUB,SUB}
-    @assert(isFiat(fee), "Sale with crypto fee is unimplemented!")
-    sBal, PAY = sBal - pay      # Computes payment tracking
-    REC = rec - fee
+# Functor with fuctionality
+function (x::𝒐𝒑Sell)(sBal::MTB)::Tuple{MTB,SUB,SUB}
+    sBal, PAY = sBal - x.pay            # Computes payment tracking / discounts payment
+    REC = x.rec - x.fee                 # Mundane (untracked) fiat subtraction
+    # Calculates loss and profit
     loss, prof = REC > PAY.fiat ? (SUB(symb(fee)), REC - PAY.fiat) : (PAY.fiat - REC, SUB(symb(fee)))
+    # Credits receivings to already discounted payment / returns results
     return (sBal + STB(REC, REC), loss, prof)
 end
+
+# Addition
++(x::𝒐𝒑Sell, y::𝒐𝒑Sell) = 𝒐𝒑Sell(x.pay + y.pay,
+                                 x.rec + y.rec,
+                                 x.fee + y.fee; date = x.date < y.date ? x.date : y.date)
+
+# show/display
+function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Sell)
+    println("Crypto Sale Operation resulting on Fiat currency with")
+    println("   - Earliest order date ..: ", x.date)
+    println("   - Payment amount .......: ", unipre(x.pay))
+    println("   - Purchase amount ......: ", pretty(x.rec))
+    println("   - Fee amount ...........: ", pretty(x.fee))
+end
+
+# export
+export 𝒐𝒑Sell
+
 
 # export
 export 𝑜Sell
