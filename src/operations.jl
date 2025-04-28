@@ -32,7 +32,6 @@ isless(x::𝕆, y::ℙ) where {𝕆 <: AbstractOP, ℙ <: AbstractOP} = isless(x
 #                                           𝒐𝒑Ini object                                           #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
-# 𝒐𝒑Ini object
 """
 `struct 𝒐𝒑Ini <: AbstractOP`\n
 Initialization operation object, that can be used as a functor for balance initializations.
@@ -50,13 +49,10 @@ julia> a = SUB(:BRL, 3000)
 julia> A = MTB(STB(a, a))
      +3000.0000000000    BRL (     +3000.00 BRL)
 
-julia> NDAX, BANK = 𝒐𝒑Ini()(), 𝒐𝒑Ini(A)();
-
-julia> NDAX
-        +0.0000000000    BRL (        +0.00 BRL)
-
-julia> BANK
-     +3000.0000000000    BRL (     +3000.00 BRL)
+julia> NDAX, BANK = [𝒐𝒑Ini()(), 𝒐𝒑Ini(A)()]
+2-element Vector{MTB}:
+         +0.0000000000    BRL (        +0.00 BRL)
+      +3000.0000000000    BRL (     +3000.00 BRL)
 ```
 """
 struct 𝒐𝒑Ini <: AbstractOP
@@ -88,7 +84,30 @@ export 𝒐𝒑Ini
 #                                           𝒐𝒑Dep object                                           #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
-# 𝒐𝒑Dep object
+"""
+`struct 𝒐𝒑Dep <: AbstractOP`\n
+Deposit operation object, that can be used as a functor for fiat deposits:
+
+Suppose `NDAX` and `BANK` hold the tracked balances of one's NovaDAX and "BANK" accounts, like so:
+
+```julia
+julia> NDAX, BANK = [𝒐𝒑Ini()(), 𝒐𝒑Ini(A)()]
+2-element Vector{MTB}:
+         +0.0000000000    BRL (        +0.00 BRL)
+      +3000.0000000000    BRL (     +3000.00 BRL)
+```
+
+A deposit object in the amount of 1200 BRL can be created and execute the transaction as follows:
+
+```julia
+julia> NDAX, BANK = [𝒐𝒑Dep(SUB(:BRL, 1200))(NDAX, BANK)...]
+2-element Vector{MTB}:
+      +1200.0000000000    BRL (     +1200.00 BRL)
+      +1800.0000000000    BRL (     +1800.00 BRL)
+```
+
+So that balances update to 1200 BRL and 1800 BRL, respectively.
+"""
 struct 𝒐𝒑Dep <: AbstractOP
     amt::SUB
     date::DateTime
