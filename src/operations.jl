@@ -145,7 +145,30 @@ export 𝒐𝒑Dep
 #                                          𝒐𝒑Draw object                                           #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
-# 𝒐𝒑Draw object
+"""
+`struct 𝒐𝒑Draw <: AbstractOP`\n
+Draw (Withdraw) operation object, that can be used as a functor for fiat withdrawals:
+
+Suppose `NDAX` and `BANK` hold the tracked balances of one's NovaDAX and "BANK" accounts, like so:
+
+```julia
+julia> NDAX, BANK
+2-element Vector{MTB}:
+      +1200.0000000000    BRL (     +1200.00 BRL)
+      +1800.0000000000    BRL (     +1800.00 BRL)
+```
+
+A withdraw object in the amount of 1200 BRL can be created and execute the transaction as follows:
+
+```julia
+julia> NDAX, BANK = [𝒐𝒑Draw(SUB(:BRL, 1200))(NDAX, BANK)...]
+2-element Vector{MTB}:
+         +0.0000000000    BRL (        +0.00 BRL)
+      +3000.0000000000    BRL (     +3000.00 BRL)
+```
+
+So that balances update to 0 BRL and 3000 BRL, respectively.
+"""
 struct 𝒐𝒑Draw <: AbstractOP
     amt::SUB
     date::DateTime
