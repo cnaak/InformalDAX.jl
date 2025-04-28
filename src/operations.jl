@@ -19,58 +19,39 @@ export emptyRFB
 #                                 Operation Functions and Objects                                  #
 #--------------------------------------------------------------------------------------------------#
 
+
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                              𝑜Init                                               #
+#                                            AbstractOP                                            #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
-"""
-`𝑜Init(prev::MTB = emptyRFB())::MTB`\n
-Initialization operation, for a new month's statement processing. Argument is previous month's
-end balance. If ommitted, defaults to an emptyRFB() one. Returns a copied `MTB`.
-
-When processing a month's statement, begin with
-
-```julia
-julia> sBal = 𝑜Init()
-        +0.0000000000    BRL (        +0.00 BRL)
-```
-
-if it's the first month (no previous month's balance), or with
-
-```julia
-julia> pBal = MTB(STB((:BRL, :BRL), (SFD(123.48), SFD(123.48))),    # Previous month's
-                  STB((:BTC, :BRL), (SFD(0.0011), SFD(624.40))))    # end balance
-      +123.4800000000    BRL (      +123.48 BRL)
-        +0.0011000000    BTC (      +624.40 BRL)
-
-julia> sBal = 𝑜Init(pBal)
-      +123.4800000000    BRL (      +123.48 BRL)
-        +0.0011000000    BTC (      +624.40 BRL)
-```
-"""
-function 𝑜Init(prev::MTB = emptyRFB())::MTB
-    return MTB(prev())
-end
+# Isless
+isless(x::𝕆, y::ℙ) where {𝕆 <: AbstractOP, ℙ <: AbstractOP} = isless(x.date, y.date)
 
 
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+#                                           𝒐𝒑Ini object                                           #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
 # 𝒐𝒑Ini object
 struct 𝒐𝒑Ini <: AbstractOP
     prev::MTB
-    𝒐𝒑Ini(prev::MTB = emptyRFB()) = new(prev)
+    date::DateTime
+    𝒐𝒑Ini(prev::MTB = emptyRFB(); date::DateTime = now()) = new(prev, date)
 end
 
-# Functor
-(x::𝒐𝒑Ini)() = 𝑜Init(x.prev)
+# Functor with functionality
+function (x::𝒐𝒑Ini)()::MTB
+    return MTB(x.prev())
+end
 
 # Addition
-+(x::𝒐𝒑Ini, y::𝒐𝒑Ini) = 𝒐𝒑Ini(x.prev + y.prev)
++(x::𝒐𝒑Ini, y::𝒐𝒑Ini) = 𝒐𝒑Ini(x.prev + y.prev; date = x.date < y.date ? x.date : y.date)
 
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Ini)
-    print("Balance Initialization Operation with\n")
-    print(pretty(x.prev))
+    println("Balance Initialization Operation with")
+    println("   - Earliest order date ..: ", x.date)
+    println("   - Previous balance .....: ", pretty(x.prev))
 end
 
 # export
@@ -78,53 +59,30 @@ export 𝑜Init, 𝒐𝒑Ini
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                             𝑜Deposit                                             #
-#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-
-"""
-`𝑜Deposit(sBal::MTB, amt::SUB)::MTB`\n
-Deposit operation, only implemented for tracked fiat amounts. `sBal` is the rolling statement
-multi-tracked balance, and `amt` is the untracked deposited amount.
-
-Returns the updated rolling tracked statement balance, as in the following:
-
-```julia
-julia> sBal = 𝑜Init()
-        +0.0000000000    BRL (        +0.00 BRL)
-
-julia> sBal = 𝑜Deposit(sBal, SUB(:BRL, 2000))
-     +2000.0000000000    BRL (     +2000.00 BRL)
-```
-
-`𝑜Deposit` operations have the same effect as "Redeemed Bonus" transactions.
-
-FOR THE MULTI-BALANCE TRANSACTION, SEE 𝑜WithDraw() with reversed multi-balance arguments.
-"""
-function 𝑜Deposit(sBal::MTB, amt::SUB)::MTB
-    @assert(symb(amt) == fiat(sBal), "Deposits not in tracking fiat unimplemented!")
-    dBal = STB(amt, amt)
-    return sBal + dBal
-end
-
-
+#                                           𝒐𝒑Dep object                                           #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
 # 𝒐𝒑Dep object
 struct 𝒐𝒑Dep <: AbstractOP
     amt::SUB
-    𝒐𝒑Dep(amt::SUB) = new(amt)
+    date::DateTime
+    𝒐𝒑Dep(amt::SUB; date::DateTime = now()) = new(amt, date)
 end
 
-# Functor
-(x::𝒐𝒑Dep)(sBal::MTB) = 𝑜Deposit(sBal, x.amt)
+# Functor with functionality
+function (x::𝒐𝒑Dep)(sBal::MTB)
+    @assert(symb(x.amt) == fiat(sBal), "Deposits not in tracking fiat unimplemented!")
+    dBal = STB(x.amt, x.amt)
+    return sBal + dBal
+end
 
 # Addition
-+(x::𝒐𝒑Dep, y::𝒐𝒑Dep) = 𝒐𝒑Dep(x.amt + y.amt)
++(x::𝒐𝒑Dep, y::𝒐𝒑Dep) = 𝒐𝒑Dep(x.amt + y.amt; date = x.date < y.date ? x.date : y.date)
 
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Dep)
-    print("Deposit Operation with\n")
-    print(pretty(x.amt))
+    println("Deposit Operation with")
+    println("   - Deposit amount .......: ", pretty(x.amt))
 end
 
 # export
@@ -168,8 +126,42 @@ function 𝑜Buy(sBal::MTB; pay::SUB, rec::SUB, fee::SUB)::MTB
     return (sBal + REC - pay)[1]
 end
 
+
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+
+# 𝒐𝒑Buy object
+struct 𝒐𝒑Buy <: AbstractOP
+    pay::SUB
+    rec::SUB
+    fee::SUB
+    date::DateTime
+    𝒐𝒑Buy(pay::SUB, rec::SUB, fee::SUB; date::DateTime = now()) = begin
+        @assert(isFiat(pay), "Buy operations must, by definition, be in fiat currency!")
+        @assert(isCryp(rec), "Buy operations must, by definition, aquire crypto currency!")
+        @assert(isCryp(fee), "Purchase fee must be in crypto currency!")
+        @assert(rec.cur == fee.cur, "Receiving and fee must be in the same currency!")
+        new(pay, rec, fee, date)
+    end
+end
+
+# Functor
+(x::𝒐𝒑Buy)(sBal::MTB) = 𝑜Buy(sBal, x.pay, x.rec, x.fee)
+
+# Addition
++(x::𝒐𝒑Buy, y::𝒐𝒑Buy) = 𝒐𝒑Buy(x.pay + y.pay,
+                              x.rec + y.rec,
+                              x.fee + y.fee; date = x.date < y.date ? x.date : y.date)
+
+# show/display
+function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Buy)
+    println("Crypto Purchase Operation with Fiat currency with")
+    println("   - Payment amount .......: ", unipre(x.pay))
+    println("   - Purchase amount ......: ", pretty(x.rec))
+    println("   - Fee amount ...........: ", pretty(x.fee))
+end
+
 # export
-export 𝑜Buy
+export 𝑜Buy, 𝒐𝒑Buy
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
