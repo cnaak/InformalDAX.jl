@@ -55,7 +55,7 @@ function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Ini)
 end
 
 # export
-export 𝑜Init, 𝒐𝒑Ini
+export 𝒐𝒑Ini
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
@@ -70,7 +70,7 @@ struct 𝒐𝒑Dep <: AbstractOP
 end
 
 # Functor with functionality
-function (x::𝒐𝒑Dep)(sBal::MTB)
+function (x::𝒐𝒑Dep)(sBal::MTB)::MTB
     @assert(symb(x.amt) == fiat(sBal), "Deposits not in tracking fiat unimplemented!")
     dBal = STB(x.amt, x.amt)
     return sBal + dBal
@@ -82,51 +82,16 @@ end
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Dep)
     println("Deposit Operation with")
+    println("   - Earliest order date ..: ", x.date)
     println("   - Deposit amount .......: ", pretty(x.amt))
 end
 
 # export
-export 𝑜Deposit, 𝒐𝒑Dep
+export 𝒐𝒑Dep
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                               𝑜Buy                                               #
-#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-
-"""
-`𝑜Buy(sBal::MTB; pay::SUB, rec::SUB, fee::SUB)::MTB`\n
-On-Ramp purchase with fee.
-
-Keyword args are:
-- `pay::SUB` is the (positive) fiat amount payed as a Single Untracked Balance;
-- `rec::SUB` is the (positive) crypto amount received as a Single Untracked Balance;
-- `fee::SUB` is the (positive) crypto amount charged as a Single Untracked Balance.
-
-Returns the updated rolling tracked statement balance, as in the following:
-
-```julia
-julia> sBal = 𝑜Init()
-        +0.0000000000    BRL (        +0.00 BRL)
-
-julia> sBal = 𝑜Deposit(sBal, SUB(:BRL, 2000))
-     +2000.0000000000    BRL (     +2000.00 BRL)
-
-julia> sBal = 𝑜Buy(sBal, pay=SUB(:BRL, 199997//100),
-                         rec=SUB(:ETH, 234//1000),
-                         fee=SUB(:ETH, 234//1000000))
-        +0.0300000000    BRL (        +0.03 BRL)
-        +0.2337660000    ETH (     +1999.97 BRL)
-```
-
-`𝑜Buy` operations have the same effect as "Convert" transactions.
-"""
-function 𝑜Buy(sBal::MTB; pay::SUB, rec::SUB, fee::SUB)::MTB
-    @assert(isCryp(fee), "Purchase with fiat fee is unimplemented!")
-    REC = STB(rec - fee, pay)
-    return (sBal + REC - pay)[1]
-end
-
-
+#                                           𝒐𝒑Buy object                                           #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
 # 𝒐𝒑Buy object
@@ -144,8 +109,11 @@ struct 𝒐𝒑Buy <: AbstractOP
     end
 end
 
-# Functor
-(x::𝒐𝒑Buy)(sBal::MTB) = 𝑜Buy(sBal, x.pay, x.rec, x.fee)
+# Functor with fuctionality
+function (x::𝒐𝒑Buy)(sBal::MTB)::MTB
+    REC = STB(x.rec - x.fee, x.pay)     # Register purchase price in tracking object
+    return ((sBal + REC) - x.pay)[1]    # Credits receivings and discounts payment
+end
 
 # Addition
 +(x::𝒐𝒑Buy, y::𝒐𝒑Buy) = 𝒐𝒑Buy(x.pay + y.pay,
@@ -155,13 +123,14 @@ end
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Buy)
     println("Crypto Purchase Operation with Fiat currency with")
+    println("   - Earliest order date ..: ", x.date)
     println("   - Payment amount .......: ", unipre(x.pay))
     println("   - Purchase amount ......: ", pretty(x.rec))
     println("   - Fee amount ...........: ", pretty(x.fee))
 end
 
 # export
-export 𝑜Buy, 𝒐𝒑Buy
+export 𝒐𝒑Buy
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
