@@ -232,6 +232,40 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
         append!(TR, [𝒐𝒑Dep(amt; date = 𝑝.DATE)])
         return 1 # Dep runs one at a time
     end
+    # function Wit
+    function Wit()
+        𝑝 = ST[𝑖]
+        @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent deposit amount currency!")
+        amt = SUB(𝑝.COIN, 𝑝.AMNT[2])
+        append!(TR, [𝒐𝒑Draw(amt; date = 𝑝.DATE)])
+        return 1 # Wit runs one at a time
+    end
+    # function Snd
+    function Snd()
+        ZER = SUB(ST[𝑖].COIN, 0)
+        oper = 𝒐𝒑Send(ZER, ZER)
+        for i in 0:1
+            𝑝 = ST[𝑥(𝑖, 1)]
+            @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent deposit amount currency!")
+            snd, fee = SUB(𝑝.COIN, 0), SUB(𝑝.COIN, 0)
+            if 𝑝.TYPE == "Send"
+                snd = SUB(𝑝.COIN, 𝑝.AMNT[2])
+            elseif 𝑝.TYPE == "Fee"
+                fee = SUB(𝑝.COIN, 𝑝.AMNT[2])
+            end
+            oper += 𝒐𝒑Send(snd, fee; date = 𝑝.DATE)
+        end
+        append!(TR, [oper, ])
+        return 2 # Snd runs two at a time
+    end
+    # function Recv
+    function Recv()
+        𝑝 = ST[𝑖]
+        @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent deposit amount currency!")
+        amt = SUB(𝑝.COIN, 𝑝.AMNT[2])
+        append!(TR, [𝒐𝒑Draw(amt; date = 𝑝.DATE)])
+        return 1 # Recv runs one at a time
+    end
     # function Buy
     function Buy(startType::NTuple{2,AbstractString})
         𝑐, 𝑓 = [Symbol(j) for j in split(startType[2], "/")]    # crypto and fiat
@@ -345,30 +379,29 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
     append!(TR, [𝒐𝒑Ini(PREV, date = 𝑥(ST[𝑖].DATE, -Day(1)))])
     while isBound(𝑖)
         if ST[𝑖].TYPE[1] in ["Deposit", "Redeemed"]
-            print("$(𝑖)D, ")
             𝑖 = 𝑥(𝑖, Dep())
+        elseif ST[𝑖].TYPE[1] in ["Withdraw", ]
+            𝑖 = 𝑥(𝑖, Wit())
+        elseif ST[𝑖].TYPE[1] in ["Send", ]
+            𝑖 = 𝑥(𝑖, Snd())
         elseif ST[𝑖].TYPE[1] in ["Buy",]
             𝑎, 𝑏 = [Symbol(j) for j in split(ST[𝑖].TYPE[2], "/")]
             𝑠 = sum([isFiat(𝑘) for 𝑘 in (𝑎, 𝑏)])
             if 𝑠 == 1
-                print("$(𝑖)B, ")
                 𝑖 = 𝑥(𝑖, Buy(ST[𝑖].TYPE))
             elseif 𝑠 == 0
-                print("$(𝑖)BX, ")
                 𝑖 = 𝑥(𝑖, Xch(ST[𝑖].TYPE))
             end
         elseif ST[𝑖].TYPE[1] in ["Sell",]
             𝑎, 𝑏 = [Symbol(j) for j in split(ST[𝑖].TYPE[2], "/")]
             𝑠 = sum([isFiat(𝑘) for 𝑘 in (𝑎, 𝑏)])
             if 𝑠 == 1
-                print("$(𝑖)S, ")
                 𝑖 = 𝑥(𝑖, Seℓ(ST[𝑖].TYPE))
             elseif 𝑠 == 0
-                print("$(𝑖)SX, ")
                 𝑖 = 𝑥(𝑖, Xch(ST[𝑖].TYPE))
             end
         else
-            print("$(𝑖)., ")
+            println("$(ST[𝑖].TYPE) $(𝑖)")
             𝑖 = 𝑥(𝑖, 1)
         end
     end
