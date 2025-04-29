@@ -418,7 +418,7 @@ struct 𝒐𝒑Send <: AbstractOP
     date::DateTime
     𝒐𝒑Send(snd::SUB, fee::SUB; date::DateTime = now()) = begin
         @assert(isCryp(snd), "Send operations must, by definition, be sending crypto currency!")
-        @assert(isCryp(fee), "Sending fee must be in crypto currency!")
+        @assert(snd.cur == fee.cur, "Sending fee must be in the same currency of what's being send!")
         new(snd, fee, date)
     end
 end
