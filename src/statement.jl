@@ -245,12 +245,12 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
         ZER = SUB(ST[𝑖].COIN, 0)
         oper = 𝒐𝒑Send(ZER, ZER)
         for i in 0:1
-            𝑝 = ST[𝑥(𝑖, 1)]
+            𝑝 = ST[𝑥(𝑖, i)]
             @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent deposit amount currency!")
             snd, fee = SUB(𝑝.COIN, 0), SUB(𝑝.COIN, 0)
-            if 𝑝.TYPE == "Send"
+            if 𝑝.TYPE[1] == "Send"
                 snd = SUB(𝑝.COIN, 𝑝.AMNT[2])
-            elseif 𝑝.TYPE == "Fee"
+            elseif 𝑝.TYPE[1] == "Fee"
                 fee = SUB(𝑝.COIN, 𝑝.AMNT[2])
             end
             oper += 𝒐𝒑Send(snd, fee; date = 𝑝.DATE)
