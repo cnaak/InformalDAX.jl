@@ -262,8 +262,10 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
     function Recv()
         𝑝 = ST[𝑖]
         @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent deposit amount currency!")
-        amt = SUB(𝑝.COIN, 𝑝.AMNT[2])
-        append!(TR, [𝒐𝒑Draw(amt; date = 𝑝.DATE)])
+        rec = SUB(𝑝.COIN, 𝑝.AMNT[2])
+        fee = SUB(𝑝.COIN, 0)
+        apr = SUB(𝑝.AMNT[4][2], 𝑝.AMNT[4][1])
+        append!(TR, [𝒐𝒑Recv(rec, fee, apr; date = 𝑝.DATE)])
         return 1 # Recv runs one at a time
     end
     # function Buy
@@ -384,6 +386,8 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
             𝑖 = 𝑥(𝑖, Wit())
         elseif ST[𝑖].TYPE[1] in ["Send", ]
             𝑖 = 𝑥(𝑖, Snd())
+        elseif ST[𝑖].TYPE[1] in ["Receive", ]
+            𝑖 = 𝑥(𝑖, Recv())
         elseif ST[𝑖].TYPE[1] in ["Buy",]
             𝑎, 𝑏 = [Symbol(j) for j in split(ST[𝑖].TYPE[2], "/")]
             𝑠 = sum([isFiat(𝑘) for 𝑘 in (𝑎, 𝑏)])
