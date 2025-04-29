@@ -243,7 +243,7 @@ struct MTB <: MulTracked
     end
     function MTB(x::STB)
         if !isFiat(x)
-            return MTB(STB(SUB(f, 0), SUB(f, 0)), x)
+            return MTB(STB(SUB(RFBFiat, 0), SUB(RFBFiat, 0)), x)
         else
             return new(Dict(symb(x) => x))
         end
