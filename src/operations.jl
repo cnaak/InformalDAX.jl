@@ -364,39 +364,24 @@ export 𝒐𝒑Sell
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                              𝑜Send                                               #
+#                                          𝒐𝒑Send object                                           #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
-"""
-`𝑜Send(sBal::MTB, amt::SUB, fee::SUB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}`\n
-Send cryptocurrency operation, with fee. `sBal` is the rolling statement multi-tracked balance;
-`amt` is the sent crypto amount, `fee` is the crypto fee amount, and `oBal` is an optional
-"other" multi-tracked balance.
+struct 𝒐𝒑Send <: AbstractOP
+    snd::SUB
+    fee::SUB
+    date::DateTime
+    𝒐𝒑Send(snd::SUB, fee::SUB; date::DateTime = now()) = begin
+        @assert(isCryp(snd), "Send operations must, by definition, be sending crypto currency!")
+        @assert(isCryp(fee), "Sending fee must be in crypto currency!")
+        new(snd, fee, date)
+    end
+end
 
-```julia
-julia> sBal, oBal = 𝑜Init(), 𝑜Init(MTB(STB((:BRL, :BRL), (1200, 1200))));
-
-julia> sBal = 𝑜Deposit(sBal, SUB(:BRL, 2000))
-     +2000.0000000000    BRL (     +2000.00 BRL)
-
-julia> sBal = 𝑜Buy(sBal, pay=SUB(:BRL, 199997//100),
-                         rec=SUB(:ETH, 234//1000),
-                         fee=SUB(:ETH, 234//1000000))
-        +0.0300000000    BRL (        +0.03 BRL)
-        +0.2337660000    ETH (     +1999.97 BRL)
-julia> sBal, oBal = 𝑜Send(sBal, SUB(:ETH, 1//5), SUB(:ETH, 1//200), oBal);
-
-julia> sBal
-        +0.0300000000    BRL (        +0.03 BRL)
-        +0.0287660000    ETH (      +246.11 BRL)
-
-julia> oBal
-     +1200.0000000000    BRL (     +1200.00 BRL)
-        +0.2050000000    ETH (     +1753.86 BRL)
-```
-"""
-function 𝑜Send(sBal::MTB, amt::SUB, fee::SUB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}
-    𝑎, 𝑏 = sBal - (amt + fee)
+# Functor with fuctionality
+function (x::𝒐𝒑Send)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple{MTB,MTB}
+    𝑎, 𝑏 = sBal - x.snd     # 𝑏 is sent balance, with tracking; 𝑎 is temporary
+    𝑎 -= (𝑎 - x.fee)[1]     # 𝑎 is the (already) tracked balance without the taken fee
     if oBal isa Nothing
         return 𝑎, MTB(𝑏)
     else
@@ -404,7 +389,26 @@ function 𝑜Send(sBal::MTB, amt::SUB, fee::SUB, oBal::Union{MTB,Nothing} = noth
     end
 end
 
+# Addition
++(x::𝒐𝒑Send, y::𝒐𝒑Sell) = 𝒐𝒑Sell(x.pay + y.pay,
+                                 x.rec + y.rec,
+                                 x.fee + y.fee; date = x.date < y.date ? x.date : y.date)
+
+# show/display
+function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Send)
+    println("Crypto Sale Operation resulting on Fiat currency with")
+    println("   - Earliest order date ..: ", x.date)
+    println("   - Payment amount .......: ", unipre(x.pay))
+    println("   - Purchase amount ......: ", pretty(x.rec))
+    println("   - Fee amount ...........: ", pretty(x.fee))
+end
+
 # export
-export 𝑜Send
+export 𝒐𝒑Send
+
+
+function 𝑜Send(sBal::MTB, amt::SUB, fee::SUB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}
+end
+
 
 
