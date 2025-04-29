@@ -7,9 +7,7 @@ SFD =  FixedDecimal{Int64,10}   # from -922337203.6854775808
                                 # upto          0.0000000001
                                 # upto  922337203.6854775807
 
-DECIM = Union{SFD, Rational, Integer}
-
 # export
-export SFD, DECIM
+export SFD
 
 
