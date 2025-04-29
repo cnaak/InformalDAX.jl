@@ -24,7 +24,17 @@ struct SUB <: Untrakd
 end
 
 # Outer constructors
-SUB(CUR::Symbol, BAL::DECIM) = SUB(CUR, SFD(BAL))
+function SUB(CUR::Symbol, BAL::Real)
+    DENO = 10000000000
+    NUME = Int64(
+        round(
+            parse(BigFloat, @sprintf("%.10f", BAL)) * DENO,
+            RoundNearest,
+            digits=0
+        )
+    )
+    SUB(CUR, SFD(NUME//DENO))
+end
 
 # bare function to return the "bare" balance
 bare(x::SUB) = x.bal
