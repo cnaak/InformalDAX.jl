@@ -552,3 +552,54 @@ end
 export 𝒐𝒑Recv
 
 
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+#                                           𝒐𝒑Xch object                                           #
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+
+"""
+`struct 𝒐𝒑Xch <: AbstractOP`\n
+Exchange operation object, that can be used as a functor for crypto-crypto swaps, with fees in
+either crypto currency.
+"""
+struct 𝒐𝒑Xch <: AbstractOP
+    pay::SUB
+    rec::SUB
+    fee::SUB
+    eef::SUB
+    date::DateTime
+    𝒐𝒑Xch(pay::SUB, rec::SUB, fee::SUB, eef::SUB; date::DateTime = now()) = begin
+        @assert(isCryp(pay), "Xch operations must, by definition, be a crypto swap!")
+        @assert(isCryp(rec), "Xch operations must, by definition, be a crypto swap!")
+        @assert(rec.cur == fee.cur, "Receiving and primary fee must be in the same currency!")
+        @assert(pay.cur == eef.cur, "Paying and secondary fee must be in the same currency!")
+        new(pay, rec, fee, eef, date)
+    end
+end
+
+# Functor with fuctionality
+function (x::𝒐𝒑Xch)(sBal::MTB)::MTB
+    dwn, pmt = sBal - (x.pay + x.eef)   # dwm, pmt: tracked (balance, pay) after payment & fee
+    cre = STB(x.rec - x.fee, pmt.fiat)  # Tracked swap/exchange credit
+    return dwn + cre                    # Tracked balance after the exchange
+end
+
+# Addition
++(x::𝒐𝒑Xch, y::𝒐𝒑Xch) = 𝒐𝒑Xch(x.pay + y.pay,
+                              x.rec + y.rec,
+                              x.fee + y.fee,
+                              x.eef + y.eef; date = x.date < y.date ? x.date : y.date)
+
+# show/display
+function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Xch)
+    println("Crypto Exchange Operation with")
+    println("   - Earliest order date ..: ", x.date)
+    println("   - Payment amount .......: ", pretty(x.pay))
+    println("   - Purchase amount ......: ", pretty(x.rec))
+    println("   - Rcving crypt fee amt .: ", pretty(x.fee))
+    println("   - Paying crypt fee amt .: ", pretty(x.eef))
+end
+
+# export
+export 𝒐𝒑Xch
+
+
