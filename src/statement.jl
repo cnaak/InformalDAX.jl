@@ -288,7 +288,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
     function Xch(startType::NTuple{2,AbstractString})
         𝑎, 𝑏 = [Symbol(j) for j in split(startType[2], "/")]    # 𝑎 and 𝑏 cryptos
         i, 𝑝 = 0, ST[𝑖]
-        𝐴, 𝐵 = startType[1] == "Sell" ? SUB(𝑎, 0), SUB(𝑏, 0) : SUB(𝑏, 0), SUB(𝑎, 0))
+        𝐴, 𝐵 = startType[1] == "Sell" ? (SUB(𝑎, 0), SUB(𝑏, 0)) : (SUB(𝑏, 0), SUB(𝑎, 0))
         oper = 𝒐𝒑Xch(𝐴, 𝐵, 𝐵, 𝐴)                                # Pure coincidence ;-)
         while 𝑝.TYPE in [startType, ("Fee", "transaction")]
             @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent purchase amount currency!")
