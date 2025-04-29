@@ -261,6 +261,72 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
         append!(TR, [oper])
         return i
     end
+    # function Seℓ
+    function Seℓ(startType::NTuple{2,AbstractString})
+        𝑐, 𝑓 = [Symbol(j) for j in split(startType[2], "/")]    # crypto and fiat
+        i, 𝑝 = 0, ST[𝑖]
+        oper = 𝒐𝒑Seℓ(SUB(𝑓, 0), SUB(𝑐, 0), SUB(𝑐, 0), SUB(𝑓, 0))
+        while 𝑝.TYPE in [startType, ("Fee", "transaction")]
+            @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent purchase amount currency!")
+            if 𝑝.COIN == 𝑓
+                rec, fee = SUB(𝑐, 0), SUB(𝑐, 0)
+                if 𝑝.TYPE[1] == "Seℓ"
+                    pay, eef = SUB(𝑝.COIN, 𝑝.AMNT[2]), SUB(𝑓, 0)
+                elseif 𝑝.TYPE[1] == "Fee"
+                    pay, eef = SUB(𝑓, 0), SUB(𝑝.COIN, 𝑝.AMNT[2])
+                end
+            elseif 𝑝.COIN == 𝑐
+                pay, eef = SUB(𝑓, 0), SUB(𝑓, 0)
+                if 𝑝.TYPE[1] == "Seℓ"
+                    rec, fee = SUB(𝑝.COIN, 𝑝.AMNT[2]), SUB(𝑐, 0)
+                elseif 𝑝.TYPE[1] == "Fee"
+                    rec, fee = SUB(𝑐, 0), SUB(𝑝.COIN, 𝑝.AMNT[2])
+                end
+            end
+            oper += 𝒐𝒑Seℓ(pay, rec, fee, eef; date = 𝑝.DATE)
+            i += 1
+            𝑝 = ST[𝑥(𝑖, i)]
+        end
+        append!(TR, [oper])
+        return i
+    end
+    # function Xch
+    function Xch(startType::NTuple{2,AbstractString})
+        𝑟, 𝑎 = [Symbol(j) for j in split(startType[2], "/")]    # puR and pAy cryptos
+        i, 𝑝 = 0, ST[𝑖]
+        oper = 𝒐𝒑Xch(SUB(𝑎, 0), SUB(𝑟, 0), SUB(𝑟, 0), SUB(𝑎, 0))
+        while 𝑝.TYPE in [startType, ("Fee", "transaction")]
+            @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent purchase amount currency!")
+            if 𝑝.COIN == 𝑎
+                if 𝑝.TYPE[1] == "Buy"
+                    pay, eef = SUB(𝑝.COIN, 𝑝.AMNT[2]), SUB(𝑎, 0)
+                    rec, fee = SUB(𝑟, 0), SUB(𝑟, 0)
+                elseif 𝑝.TYPE[1] == "Sell"
+                    pay, eef = SUB(𝑟, 0), SUB(𝑟, 0)
+                    rec, fee = SUB(𝑝.COIN, 𝑝.AMNT[2]), SUB(𝑎, 0)
+                elseif 𝑝.TYPE[1] == "Fee"
+                    pay, eef = SUB(𝑎, 0), SUB(𝑝.COIN, 𝑝.AMNT[2])
+                    rec, fee = SUB(𝑟, 0), SUB(𝑟, 0)
+                end
+            elseif 𝑝.COIN == 𝑟
+                if 𝑝.TYPE[1] == "Buy"
+                    pay, eef = SUB(𝑎, 0), SUB(𝑎, 0)
+                    rec, fee = SUB(𝑝.COIN, 𝑝.AMNT[2]), SUB(𝑟, 0)
+                elseif 𝑝.TYPE[1] == "Sell"
+                    pay, eef = SUB(𝑝.COIN, 𝑝.AMNT[2]), SUB(𝑟, 0)
+                    rec, fee = SUB(𝑎, 0), SUB(𝑎, 0)
+                elseif 𝑝.TYPE[1] == "Fee"
+                    pay, eef = SUB(𝑎, 0), SUB(𝑎, 0)
+                    rec, fee = SUB(𝑟, 0), SUB(𝑝.COIN, 𝑝.AMNT[2])
+                end
+            end
+            oper += 𝒐𝒑Xch(pay, rec, fee, eef; date = 𝑝.DATE)
+            i += 1
+            𝑝 = ST[𝑥(𝑖, i)]
+        end
+        append!(TR, [oper])
+        return i
+    end
     # -------------
     ℓ = length(ST)
     𝑥 = fwd ? (+) : (-)
@@ -276,7 +342,15 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
             if 𝑠 == 1
                 𝑖 = 𝑥(𝑖, Buy(ST[𝑖].TYPE))
             elseif 𝑠 == 0
-                #𝑖 = 𝑥(𝑖, Buy(ST[𝑖].TYPE))
+                𝑖 = 𝑥(𝑖, Xch(ST[𝑖].TYPE))
+            end
+        elseif ST[𝑖].TYPE[1] in ["Sell",]
+            𝑎, 𝑏 = [Symbol(j) for j in split(ST[𝑖].TYPE[2], "/")]
+            𝑠 = sum([isFiat(𝑘) for 𝑘 in (𝑎, 𝑏)])
+            if 𝑠 == 1
+                𝑖 = 𝑥(𝑖, Seℓ(ST[𝑖].TYPE))
+            elseif 𝑠 == 0
+                𝑖 = 𝑥(𝑖, Xch(ST[𝑖].TYPE))
             end
         else
             𝑖 = 𝑥(𝑖, 1)
