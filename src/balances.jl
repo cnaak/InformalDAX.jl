@@ -251,14 +251,16 @@ struct MTB <: MulTracked
 end
 
 # outer constructors
-function MTB(s::Vector{NTuple{2,Symbol}}, b::Vector{Tuple{ℝ,𝕊}}) where {ℝ<:Real, 𝕊<:Real}
+function MTB(s::Vector{NTuple{2,Symbol}}, b::Vector{STB})
     @assert(length(s) == length(b), "Mismatching argument lengths!")
     𝑠 = tuple([STB(s[i], b[i]) for i in 1:length(s)]...)
     MTB(𝑠...)
 end
 
 # Functor output's outer (copy) constructor
-MTB(𝑝::Pair{Vector{NTuple{2,Symbol}}, Vector{Tuple{ℝ,𝕊}}}) where {ℝ<:Real, 𝕊<:Real} = MTB(𝑝...)
+MTB(𝑝::Pair{Vector{NTuple{2,Symbol}}, Vector{STB}}) = MTB(𝑝...)
+
+MTB(𝑑::Dict{NTuple{2,Symbol},STB}) = MTB([keys(𝑑)...] => [values(𝑑)...])
 
 # export
 export MTB
