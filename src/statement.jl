@@ -219,13 +219,17 @@ end
 #--------------------------------------------------------------------------------------------------#
 
 # Accumulates and groups transactions, translating them into a Vector of operations with arguments
-function accumGroupTrans!(TR::Vector{AbstractOP}, ST::Vector{ParSTLn}, fwd::Bool)
+function accumGroupTrans!(TR::Vector{AbstractOP},
+                          ST::Vector{ParSTLn},
+                          fwd::Bool,
+                          PREV::MTB,                    # This (previous) MTB
+                          OTHR::Union{MTB,Nothing})     # Other (external) MTB
     # function Dep
     function Dep()
         𝑝 = ST[𝑖]
         @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent deposit amount currency!")
         amt = SUB(𝑝.COIN, 𝑝.AMNT[2])
-        append!(TR, [𝒐𝒑Dep(amt)])
+        append!(TR, [𝒐𝒑Dep(amt; date = 𝑝.DATE)])
         return 1 # Dep runs one at a time
     end
     # -------------
@@ -233,6 +237,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP}, ST::Vector{ParSTLn}, fwd::Bool
     𝑥 = fwd ? (+) : (-)
     𝑖 = fwd ? 1 : ℓ
     isBound(ind) = 1 <= ind <= ℓ
+    append!(TR, [𝒐𝒑Ini(PREV, date = 𝑥(ST[𝑖].DATE, -Day(1)))])
     #while isBound(𝑖)
     #    if ST[𝑖].TYPE[1] in ["Deposit", "Redeemed"]
     #        𝑖 = 𝑥(𝑖, Dep())
