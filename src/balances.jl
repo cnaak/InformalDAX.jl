@@ -230,17 +230,23 @@ Multiple, Tracked Balance.
 """
 struct MTB <: MulTracked
     Mult::Dict{NTuple{2,Symbol},STB}
-    function MTB(x::STB)
-        @assert(isFiat(x), "Missing Fiat:Fiat balance!")
-        new(Dict(symb(x) => x))
-    end
     function MTB(x::STB...)
         𝑐 = Set([symb(i)[1] for i in x])
         𝑓 = Set([symb(i)[2] for i in x])
         @assert(length([𝑓...]) == 1, "Multiple tracking fiats!")
         f = [𝑓...][1]
-        @assert(f ∈ 𝑐, "Missing Fiat:Fiat balance!")
-        new(Dict([symb(i) => i for i in x]))
+        if !(f ∈ 𝑐)
+            return MTB(STB(SUB(f, 0), SUB(f, 0)), x...)
+        else
+            return new(Dict([symb(i) => i for i in x]))
+        end
+    end
+    function MTB(x::STB)
+        if !isFiat(x)
+            return MTB(STB(SUB(f, 0), SUB(f, 0)), x)
+        else
+            return new(Dict(symb(x) => x))
+        end
     end
 end
 
