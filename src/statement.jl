@@ -255,7 +255,11 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
             end
             oper += 𝒐𝒑Buy(pay, rec, fee, eef; date = 𝑝.DATE)
             i += 1
-            𝑝 = ST[𝑥(𝑖, i)]
+            if isBound(𝑥(𝑖, i))
+                𝑝 = ST[𝑥(𝑖, i)]
+            else
+                break
+            end
         end
         append!(TR, [oper])
         return i
@@ -279,7 +283,11 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
             end
             oper += 𝒐𝒑Sell(pay, rec, fee; date = 𝑝.DATE)
             i += 1
-            𝑝 = ST[𝑥(𝑖, i)]
+            if isBound(𝑥(𝑖, i))
+                𝑝 = ST[𝑥(𝑖, i)]
+            else
+                break
+            end
         end
         append!(TR, [oper])
         return i
@@ -292,7 +300,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
         oper = 𝒐𝒑Xch(𝐴, 𝐵, 𝐵, 𝐴)                                # Pure coincidence ;-)
         while 𝑝.TYPE in [startType, ("Fee", "transaction")]
             @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent purchase amount currency!")
-            pay, rec, fee, eef = 𝐵, 𝐴, 𝐴, 𝐵
+            pay, rec, fee, eef = 𝐴, 𝐵, 𝐵, 𝐴
             if 𝑝.COIN == 𝑏
                 if 𝑝.TYPE[1] == "Buy"
                     pay = SUB(𝑝.COIN, 𝑝.AMNT[2])
@@ -320,7 +328,11 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
             end
             oper += 𝒐𝒑Xch(pay, rec, fee, eef; date = 𝑝.DATE)
             i += 1
-            𝑝 = ST[𝑥(𝑖, i)]
+            if isBound(𝑥(𝑖, i))
+                𝑝 = ST[𝑥(𝑖, i)]
+            else
+                break
+            end
         end
         append!(TR, [oper])
         return i
