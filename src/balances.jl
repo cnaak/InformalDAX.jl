@@ -126,7 +126,7 @@ end
 
 # outer constructors
 STB(symb::NTuple{2,Symbol},
-    bare::NTuple{2,Union{SFD,Real}} = (0, 0)) = begin
+    bare::NTuple{2,Real} = (0, 0)) = begin
     STB(SUB(symb[1], bare[1]), SUB(symb[2], bare[2]))
 end
 
@@ -245,14 +245,14 @@ struct MTB <: MulTracked
 end
 
 # outer constructors
-function MTB(s::Vector{NTuple{2,Symbol}}, b::Vector{NTuple{2,SFD}})
+function MTB(s::Vector{NTuple{2,Symbol}}, b::Vector{NTuple{2,Real}})
     @assert(length(s) == length(b), "Mismatching argument lengths!")
     𝑠 = tuple([STB(s[i], b[i]) for i in 1:length(s)]...)
     MTB(𝑠...)
 end
 
 # Functor output's outer (copy) constructor
-MTB(𝑝::Pair{Vector{NTuple{2,Symbol}}, Vector{NTuple{2,SFD}}}) = MTB(𝑝...)
+MTB(𝑝::Pair{Vector{NTuple{2,Symbol}}, Vector{NTuple{2,Real}}}) = MTB(𝑝...)
 
 # export
 export MTB
