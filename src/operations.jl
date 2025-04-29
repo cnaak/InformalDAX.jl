@@ -299,9 +299,27 @@ Crypto Sale Operation resulting on Fiat currency with
    - Purchase amount ......:       +500.00 BRL
    - Fee amount ...........:        +10.00 BRL
 
-julia> 
+julia> NDAX, loss, profit = [x(NDAX)...]
+3-element Vector{AbstractBL}:
+      +1190.0000000000    BRL (     +1190.00 BRL)   # NDAX
+        +0.0050000000    ETH (       +55.56 BRL)    # NDAX
+         +0.00 BRL                                  # loss
+        +45.56 BRL                                  # profit
 ```
 
+One can compare the old total balance in fiat currency plus the profit:
+
+```julia
+julia> SUB(:BRL, 1200) + profit
+     +1245.56 BRL
+```
+
+with the updated total fiat amount in `NDAX`:
+
+```julia
+julia> sum([i[2].fiat for i in NDAX.Mult])
+     +1245.56 BRL
+```
 """
 struct 𝒐𝒑Sell <: AbstractOP
     pay::SUB
@@ -343,47 +361,6 @@ end
 
 # export
 export 𝒐𝒑Sell
-
-
-#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                            𝑜Withdraw                                             #
-#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-
-"""
-`𝑜Withdraw(sBal::MTB, amt::SUB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}`\n
-Withdraw operation, only implemented for tracked fiat amounts. `sBal` is the rolling statement
-multi-tracked balance; `amt` is the untracked withdrawal amount, and `oBal` is an optional
-"other" multi-tracked balance.
-
-Returns a 2-tuple with the updated rolling tracked statement balances, as in the following:
-
-```julia
-julia> sBal, oBal = 𝑜Init(), 𝑜Init(MTB(STB((:BRL, :BRL), (1200, 1200))));
-
-julia> sBal = 𝑜Deposit(sBal, SUB(:BRL, 2000))
-     +2000.0000000000    BRL (     +2000.00 BRL)
-
-julia> sBal, oBal = 𝑜Withdraw(sBal, SUB(:BRL, 2000), oBal);
-
-julia> sBal
-        +0.0000000000    BRL (        +0.00 BRL)
-
-julia> oBal
-     +3200.0000000000    BRL (     +3200.00 BRL)
-```
-"""
-function 𝑜Withdraw(sBal::MTB, amt::SUB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}
-    @assert(symb(amt) == fiat(sBal), "Withdrawals not in tracking fiat unimplemented!")
-    𝑎, 𝑏 = sBal - amt
-    if oBal isa Nothing
-        return 𝑎, MTB(𝑏)
-    else
-        return 𝑎, oBal + 𝑏
-    end
-end
-
-# export
-export 𝑜Withdraw
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
