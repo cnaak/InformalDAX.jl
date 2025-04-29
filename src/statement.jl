@@ -236,19 +236,25 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
     function Buy(startType::NTuple{2,AbstractString})
         𝑐, 𝑓 = [Symbol(j) for j in split(startType[2], "/")]    # crypto and fiat
         i, 𝑝 = 0, ST[𝑖]
-        oper = 𝒐𝒑Buy(SUB(𝑓, 0), SUB(𝑐, 0), SUB(𝑐, 0))
+        oper = 𝒐𝒑Buy(SUB(𝑓, 0), SUB(𝑐, 0), SUB(𝑐, 0), SUB(𝑓, 0))
         while 𝑝.TYPE in [startType, ("Fee", "transaction")]
             @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent purchase amount currency!")
             if 𝑝.COIN == 𝑓
-                pay, rec, fee = SUB(𝑝.AMNT[3], 𝑝.AMNT[2]), SUB(𝑐, 0), SUB(𝑐, 0)
-            elseif 𝑝.COIN == 𝑐
+                rec, fee = SUB(𝑐, 0), SUB(𝑐, 0)
                 if 𝑝.TYPE[1] == "Buy"
-                    pay, rec, fee = SUB(𝑓, 0), SUB(𝑝.AMNT[3], 𝑝.AMNT[2]), SUB(𝑐, 0)
+                    pay, eef = SUB(𝑝.COIN, 𝑝.AMNT[2]), SUB(𝑓, 0)
                 elseif 𝑝.TYPE[1] == "Fee"
-                    pay, rec, fee = SUB(𝑓, 0), SUB(𝑐, 0), SUB(𝑝.AMNT[3], 𝑝.AMNT[2])
+                    pay, eef = SUB(𝑓, 0), SUB(𝑝.COIN, 𝑝.AMNT[2])
+                end
+            elseif 𝑝.COIN == 𝑐
+                pay, eef = SUB(𝑓, 0), SUB(𝑓, 0)
+                if 𝑝.TYPE[1] == "Buy"
+                    rec, fee = SUB(𝑝.COIN, 𝑝.AMNT[2]), SUB(𝑐, 0)
+                elseif 𝑝.TYPE[1] == "Fee"
+                    rec, fee = SUB(𝑐, 0), SUB(𝑝.COIN, 𝑝.AMNT[2])
                 end
             end
-            oper += 𝒐𝒑Buy(pay, rec, fee; date = 𝑝.DATE)
+            oper += 𝒐𝒑Buy(pay, rec, fee, eef; date = 𝑝.DATE)
             i += 1
             𝑝 = ST[𝑥(𝑖, i)]
         end
@@ -265,6 +271,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
         if ST[𝑖].TYPE[1] in ["Deposit", "Redeemed"]
             𝑖 = 𝑥(𝑖, Dep())
         elseif ST[𝑖].TYPE[1] in ["Buy",]
+            𝑎, 𝑏 = [Symbol(j) for j in split(startType[2], "/")]
             𝑖 = 𝑥(𝑖, Buy(ST[𝑖].TYPE))
         else
             𝑖 = 𝑥(𝑖, 1)
