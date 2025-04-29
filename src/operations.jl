@@ -246,7 +246,7 @@ struct 𝒐𝒑Buy <: AbstractOP
         @assert(isFiat(eef), "Secnd purchase fee must be in fiat currency!")
         @assert(rec.cur == fee.cur, "Receiving and 1st fee must be in the same currency!")
         @assert(pay.cur == eef.cur, "Payment and 2nd fee must be in the same currency!")
-        new(pay, rec, fee, eef; date = date)
+        new(pay, rec, fee, eef, date)
     end
 end
 
