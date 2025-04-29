@@ -199,9 +199,9 @@ end
 # export
 export raw
 
-function Base.show(io::IO, ::MIME"text/plain", x::ParSTLn)
-    print(@sprintf("ParSTLn(GenSTLn(%s))", repr(raw(x))))
-end
+# function Base.show(io::IO, ::MIME"text/plain", x::ParSTLn)
+#     print(@sprintf("ParSTLn(GenSTLn(%s))", repr(raw(x))))
+# end
 
 
 #--------------------------------------------------------------------------------------------------#
@@ -212,5 +212,35 @@ end
 function GenSTLn(p::ParSTLn)
     return GenSTLn(p.STML)
 end
+
+
+#--------------------------------------------------------------------------------------------------#
+#                                      Accumulating Functions                                      #
+#--------------------------------------------------------------------------------------------------#
+
+# Accumulates and groups transactions, translating them into a Vector of operations with arguments
+function accumGroupTrans!(TR::Vector{AbstractOP}, ST::Vector{ParSTLn}, fwd::Bool)
+    # function Dep
+    function Dep()
+        𝑝 = ST[𝑖]
+        @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent deposit amount currency!")
+        amt = SUB(𝑝.COIN, 𝑝.AMNT[2])
+        append!(TR, [𝒐𝒑Dep(amt)])
+        return 1 # Dep runs one at a time
+    end
+    # -------------
+    ℓ = length(ST)
+    𝑥 = fwd ? (+) : (-)
+    𝑖 = fwd ? 1 : ℓ
+    isBound(ind) = 1 <= ind <= ℓ
+    #while isBound(𝑖)
+    #    if ST[𝑖].TYPE[1] in ["Deposit", "Redeemed"]
+    #        𝑖 = 𝑥(𝑖, Dep())
+    #    elseif
+    #        ...
+    #    end
+    #end
+end
+
 
 
