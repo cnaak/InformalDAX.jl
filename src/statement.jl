@@ -222,8 +222,7 @@ end
 function accumGroupTrans!(TR::Vector{AbstractOP},
                           ST::Vector{ParSTLn},
                           fwd::Bool,
-                          PREV::MTB,                    # This (previous) MTB
-                          OTHR::Union{MTB,Nothing})     # Other (external) MTB
+                          PREV::MTB)                # This (previous) MTB
     # function Dep
     function Dep()
         𝑝 = ST[𝑖]
@@ -415,15 +414,34 @@ end
 export accumGroupTrans!
 
 # Run operations
-function run!(sBal::MTB, oBal::Union{Nothing, MTB}, TR::Vector{AbstractOP})
+function run!(TR::Vector{AbstractOP},
+              nBal::MTB,
+              oBal::Union{Nothing, MTB},
+              bBal::Union{Nothing, MTB})
+    LOSS = AbstractBL[]
+    PROF = AbstractBL[]
     for x in TR
         if x isa 𝒐𝒑Ini
-            sBal = x()
+            nBal = x()
         elseif x isa 𝒐𝒑Dep
-            sBal = x(sBal, oBal)[1]
+            nBal, bBal = x(nBal, bBal)
+        elseif x isa 𝒐𝒑Draw
+            nBal, bBal = x(nBal, bBal)
+        elseif x isa 𝒐𝒑Buy
+            nBal = x(nBal)
+        elseif x isa 𝒐𝒑Sell
+            nBal, L, P = x(nBal)
+            append!(LOSS, [L,])
+            append!(PROF, [P,])
+        elseif x isa 𝒐𝒑Send
+            nBal, oBal = x(nBal, oBal)
+        elseif x isa 𝒐𝒑Recv
+            nBal, oBal = x(nBal, oBal)
+        elseif x isa 𝒐𝒑Xch
+            nBal = x(nBal)
         end
     end
-    return sBal
+    return nBal, oBal, bBal, LOSS, PROF
 end
 
 # export
