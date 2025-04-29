@@ -221,7 +221,7 @@ One then purchases 0.05 ETH by paying 500 BRL, with a 0.005 ETH fee. This transa
 executed as follows, as to update one's `NDAX` balance to:
 
 ```julia
-julia> NDAX = 𝒐𝒑Buy(SUB(:BRL, 500), SUB(:ETH, 5//100), SUB(:ETH, 5//1000))(NDAX)
+julia> NDAX = 𝒐𝒑Buy(SUB(:BRL, 500), SUB(:ETH, 5//100), SUB(:ETH, 5//1000), SUB(:BRL, 0))(NDAX)
       +700.0000000000    BRL (      +700.00 BRL)
         +0.0450000000    ETH (      +500.00 BRL)
 ```
@@ -237,26 +237,30 @@ struct 𝒐𝒑Buy <: AbstractOP
     pay::SUB
     rec::SUB
     fee::SUB
+    eef::SUB
     date::DateTime
-    𝒐𝒑Buy(pay::SUB, rec::SUB, fee::SUB; date::DateTime = now()) = begin
+    𝒐𝒑Buy(pay::SUB, rec::SUB, fee::SUB, eef::SUB; date::DateTime = now()) = begin
         @assert(isFiat(pay), "Buy operations must, by definition, be in fiat currency!")
         @assert(isCryp(rec), "Buy operations must, by definition, aquire crypto currency!")
-        @assert(isCryp(fee), "Purchase fee must be in crypto currency!")
-        @assert(rec.cur == fee.cur, "Receiving and fee must be in the same currency!")
+        @assert(isCryp(fee), "First purchase fee must be in crypto currency!")
+        @assert(isFiat(eef), "Secnd purchase fee must be in fiat currency!")
+        @assert(rec.cur == fee.cur, "Receiving and 1st fee must be in the same currency!")
+        @assert(pay.cur == eef.cur, "Payment and 2nd fee must be in the same currency!")
         new(pay, rec, fee, date)
     end
 end
 
 # Functor with fuctionality
 function (x::𝒐𝒑Buy)(sBal::MTB)::MTB
-    REC = STB(x.rec - x.fee, x.pay)     # Register purchase price in tracking object
-    return ((sBal + REC) - x.pay)[1]    # Credits receivings and discounts payment
+    REC = STB(x.rec - x.fee, x.pay + x.eef)     # Register total purchase price in tracking object
+    return ((sBal + REC) - (x.pay + x.eef))[1]  # Credits receivings and discounts payment
 end
 
 # Addition
 +(x::𝒐𝒑Buy, y::𝒐𝒑Buy) = 𝒐𝒑Buy(x.pay + y.pay,
                               x.rec + y.rec,
-                              x.fee + y.fee; date = x.date < y.date ? x.date : y.date)
+                              x.fee + y.fee,
+                              x.eef + y.eef; date = x.date < y.date ? x.date : y.date)
 
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Buy)
@@ -264,7 +268,8 @@ function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Buy)
     println("   - Earliest order date ..: ", x.date)
     println("   - Payment amount .......: ", unipre(x.pay))
     println("   - Purchase amount ......: ", pretty(x.rec))
-    println("   - Fee amount ...........: ", pretty(x.fee))
+    println("   - Cryp fee amount ......: ", pretty(x.fee))
+    println("   - Fiat Fee amount ......: ", pretty(x.eef))
 end
 
 # export
