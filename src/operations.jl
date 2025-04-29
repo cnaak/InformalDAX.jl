@@ -277,7 +277,7 @@ export 𝒐𝒑Buy
 
 """
 `struct 𝒐𝒑Sell <: AbstractOP`\n
-Sell operation object, that can be used as a functor for crypto purchases:
+Sell operation object, that can be used as a functor for crypto sales:
 
 Suppose `NDAX` holds the following balance in one's account:
 
@@ -367,6 +367,46 @@ export 𝒐𝒑Sell
 #                                          𝒐𝒑Send object                                           #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
+"""
+`struct 𝒐𝒑Send <: AbstractOP`\n
+Send operation object, that can be used as a functor for outbound crypto transfers:
+
+Suppose `NDAX` holds the following balance in one's account:
+
+```julia
+julia> NDAX
+     +1200.0000000000    BRL (     +1200.00 BRL)
+        +0.0450000000    ETH (      +500.00 BRL)
+```
+
+One then sends 0.04 ETH, with a fee of 0.004 ETH to a private wallet (say, Phantom) with the
+folowing balance:
+
+```julia
+julia> PHAN
+        +0.0000000000    BRL (        +0.00 BRL)    # This Fiat balance is forced by the `MTB`
+        +0.0120000000    BTC (     +7196.00 BRL)
+        +0.3000000000    ETH (     +1250.00 BRL)
+```
+
+This transaction can be executed as follows, as to update one's `NDAX` (and `PHAN`) balance(s):
+
+```julia
+julia> x = 𝒐𝒑Send(SUB(:ETH, 0.04), SUB(:ETH, 0.004))
+Crypto Sale Operation resulting on Fiat currency with
+   - Earliest order date ..: 2025-04-28T23:23:40.292
+   - Send amount ..........:         +0.0400000000    ETH
+   - Fee amount ...........:         +0.0040000000    ETH
+
+julia> NDAX, PHAN = [x(NDAX, PHAN)...]
+2-element Vector{MTB}:
+      +1200.0000000000    BRL (     +1200.00 BRL)   # NDAX ⇩
+        +0.0010000000    ETH (       +11.11 BRL)
+         +0.0000000000    BRL (        +0.00 BRL)   # PHAN ⇩
+        +0.0120000000    BTC (     +7196.00 BRL)
+        +0.3400000000    ETH (     +1694.44 BRL)
+```
+"""
 struct 𝒐𝒑Send <: AbstractOP
     snd::SUB
     fee::SUB
@@ -381,7 +421,7 @@ end
 # Functor with fuctionality
 function (x::𝒐𝒑Send)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple{MTB,MTB}
     𝑎, 𝑏 = sBal - x.snd     # 𝑏 is sent balance, with tracking; 𝑎 is temporary
-    𝑎 -= (𝑎 - x.fee)[1]     # 𝑎 is the (already) tracked balance without the taken fee
+    𝑎    = (𝑎 - x.fee)[1]   # 𝑎 is the (already) tracked balance without the taken fee
     if oBal isa Nothing
         return 𝑎, MTB(𝑏)
     else
@@ -390,16 +430,14 @@ function (x::𝒐𝒑Send)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple
 end
 
 # Addition
-+(x::𝒐𝒑Send, y::𝒐𝒑Sell) = 𝒐𝒑Sell(x.pay + y.pay,
-                                 x.rec + y.rec,
++(x::𝒐𝒑Send, y::𝒐𝒑Send) = 𝒐𝒑Send(x.snd + y.snd,
                                  x.fee + y.fee; date = x.date < y.date ? x.date : y.date)
 
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Send)
     println("Crypto Sale Operation resulting on Fiat currency with")
     println("   - Earliest order date ..: ", x.date)
-    println("   - Payment amount .......: ", unipre(x.pay))
-    println("   - Purchase amount ......: ", pretty(x.rec))
+    println("   - Send amount ..........: ", pretty(x.snd))
     println("   - Fee amount ...........: ", pretty(x.fee))
 end
 
@@ -407,8 +445,105 @@ end
 export 𝒐𝒑Send
 
 
-function 𝑜Send(sBal::MTB, amt::SUB, fee::SUB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+#                                          𝒐𝒑Recv object                                           #
+#⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
+
+"""
+`struct 𝒐𝒑Recv <: AbstractOP`\n
+Recv operation object, that can be used as a functor for inbound crypto transfers.
+
+Depending on available / provided arguments, the inbound fiat tracking can be based either (i)
+on another multi-tracking balance, or (ii) on an approximation (by market price at transaction
+time) provided in the NovaDAX statements, which is what NovaDAX 𝑐𝑎𝑛 have, and therefore likely
+what's they use with RFB.
+
+Suppose one's `NDAX` and `PHAN` multi-tracked statements hold the following balances:
+
+```julia
+julia> [NDAX, PHAN]
+2-element Vector{MTB}:
+      +1200.0000000000    BRL (     +1200.00 BRL)   # NDAX ⇩
+        +0.0010000000    ETH (       +11.11 BRL)
+         +0.0000000000    BRL (        +0.00 BRL)   # PHAN ⇩
+        +0.0120000000    BTC (     +7196.00 BRL)
+        +0.3400000000    ETH (     +1694.44 BRL)
+```
+
+One then sends from one's private wallet (say, Phantom), at a moment in which the price of
+ETH/BRL is high, of 628.12 BRL per 0.044 ETH, which is the receiving amount. Recall in the
+"send" example, o.045 ETH was purchased by 500 BRL.
+
+This transaction can be executed as follows, as to update one's `NDAX` (and `PHAN`) balance(s):
+
+```julia
+julia> x = 𝒐𝒑Recv(SUB(:ETH, 0.044), SUB(:ETH, 0.001), SUB(:BRL, 628.12))
+Crypto Receiving Operation with
+   - Earliest order date ..: 2025-04-29T00:11:14.382
+   - Recv amount ..........:         +0.0440000000    ETH
+   - Approximate tracking..:       +628.1200000000    BRL
+   - Fee amount ...........:         +0.0010000000    ETH
+
+julia> 𝐍, 𝐏 = [x(NDAX, PHAN)...]    # This uses actually calculated trackings
+2-element Vector{MTB}:
+      +1200.0000000000    BRL (     +1200.00 BRL)   # 𝐍 ⇩
+        +0.0120000000    BTC (     +7196.00 BRL)
+        +0.0450000000    ETH (      +230.39 BRL)
+         +0.0000000000    BRL (        +0.00 BRL)   # 𝐏 ⇩
+        +0.0120000000    BTC (     +7196.00 BRL)
+        +0.2950000000    ETH (     +1470.18 BRL)
+
+julia> 𝐍, 𝐏 = [x(NDAX)...]          # This uses approximate (market price) trackings
+2-element Vector{Union{Nothing, MTB}}:
+      +1200.0000000000    BRL (     +1200.00 BRL)
+        +0.0120000000    BTC (     +7196.00 BRL)
+        +0.0450000000    ETH (      +639.23 BRL)
+ nothing
+```
+"""
+struct 𝒐𝒑Recv <: AbstractOP
+    rcv::SUB
+    fee::SUB
+    apr::SUB
+    date::DateTime
+    𝒐𝒑Recv(rcv::SUB, fee::SUB, apr::SUB; date::DateTime = now()) = begin
+        @assert(isCryp(rcv), "Recv operations must, by definition, be receiving crypto currency!")
+        @assert(isCryp(fee), "Receiving fee must be in crypto currency!")
+        @assert(isFiat(apr), "Approximate statement tracking must be fiat!")
+        new(rcv, fee, apr, date)
+    end
 end
 
+# Functor with fuctionality
+function (x::𝒐𝒑Recv)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple{MTB,Union{MTB,Nothing}}
+    if oBal isa Nothing
+        # Don't have to update oBal
+        # But no tracking info either (use approximation)
+        sBal += STB(x.rcv, x.apr)   # Aggregates aproximate tracking into received amount
+        return sBal, nothing
+    else
+        𝑎, 𝑏 = oBal - x.rcv     # This makes 𝑏 as the transfered amount (with tracking)
+        𝑎    = (𝑎 - x.fee)[1]   # This makes 𝑎 as the tracked balance for oBal
+        sBal += 𝑏
+        return sBal, 𝑎
+    end
+end
+
+# Addition
++(x::𝒐𝒑Recv, y::𝒐𝒑Recv) = 𝒐𝒑Sell(x.rcv + y.rcv,
+                                 x.fee + y.fee,
+                                 x.apr + y.apr; date = x.date < y.date ? x.date : y.date)
+
+# show/display
+function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Recv)
+    println("Crypto Receiving Operation with")
+    println("   - Earliest order date ..: ", x.date)
+    println("   - Recv amount ..........: ", pretty(x.rcv))
+    println("   - Approximate tracking..: ", unipre(x.apr))
+    println("   - Fee amount ...........: ", pretty(x.fee))
+end
+
+# export
+export 𝒐𝒑Recv
 
 
