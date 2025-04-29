@@ -265,7 +265,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
     function Seℓ(startType::NTuple{2,AbstractString})
         𝑐, 𝑓 = [Symbol(j) for j in split(startType[2], "/")]    # crypto and fiat
         i, 𝑝 = 0, ST[𝑖]
-        oper = 𝒐𝒑Seℓ(SUB(𝑐, 0), SUB(𝑓, 0), SUB(𝑓, 0))
+        oper = 𝒐𝒑Sell(SUB(𝑐, 0), SUB(𝑓, 0), SUB(𝑓, 0))
         while 𝑝.TYPE in [startType, ("Fee", "transaction")]
             @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent purchase amount currency!")
             if 𝑝.COIN == 𝑓
@@ -278,7 +278,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
             elseif 𝑝.COIN == 𝑐
                 rec, fee, pay = SUB(𝑓, 0), SUB(𝑓, 0), SUB(𝑝.COIN, 𝑝.AMNT[2])
             end
-            oper += 𝒐𝒑Seℓ(pay, rec, fee; date = 𝑝.DATE)
+            oper += 𝒐𝒑Sell(pay, rec, fee; date = 𝑝.DATE)
             i += 1
             𝑝 = ST[𝑥(𝑖, i)]
         end
