@@ -440,7 +440,7 @@ end
 
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Send)
-    println("Crypto Sale Operation resulting on Fiat currency with")
+    println("Crypto Outbound Transfer Operation with")
     println("   - Earliest order date ..: ", x.date)
     println("   - Send amount ..........: ", pretty(x.snd))
     println("   - Fee amount ...........: ", pretty(x.fee))
@@ -541,7 +541,7 @@ end
 
 # show/display
 function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Recv)
-    println("Crypto Receiving Operation with")
+    println("Crypto Inbound Transfer Operation with")
     println("   - Earliest order date ..: ", x.date)
     println("   - Recv amount ..........: ", pretty(x.rcv))
     println("   - Approximate tracking..: ", unipre(x.apr))
