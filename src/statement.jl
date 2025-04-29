@@ -267,16 +267,16 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
         i, 𝑝 = 0, ST[𝑖]
         oper = 𝒐𝒑Sell(SUB(𝑐, 0), SUB(𝑓, 0), SUB(𝑓, 0))
         while 𝑝.TYPE in [startType, ("Fee", "transaction")]
+            pay, rec, fee = SUB(𝑐, 0), SUB(𝑓, 0), SUB(𝑓, 0)
             @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent purchase amount currency!")
             if 𝑝.COIN == 𝑓
-                pay = SUB(𝑐, 0)
                 if 𝑝.TYPE[1] == "Seℓ"
-                    rec, fee = SUB(𝑝.COIN, 𝑝.AMNT[2]), SUB(𝑓, 0)
+                    rec = SUB(𝑝.COIN, 𝑝.AMNT[2])
                 elseif 𝑝.TYPE[1] == "Fee"
-                    rec, fee = SUB(𝑓, 0), SUB(𝑝.COIN, 𝑝.AMNT[2])
+                    fee = SUB(𝑝.COIN, 𝑝.AMNT[2])
                 end
             elseif 𝑝.COIN == 𝑐
-                rec, fee, pay = SUB(𝑓, 0), SUB(𝑓, 0), SUB(𝑝.COIN, 𝑝.AMNT[2])
+                pay = SUB(𝑝.COIN, 𝑝.AMNT[2])
             end
             oper += 𝒐𝒑Sell(pay, rec, fee; date = 𝑝.DATE)
             i += 1
