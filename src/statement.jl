@@ -239,19 +239,18 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
         oper = 𝒐𝒑Buy(SUB(𝑓, 0), SUB(𝑐, 0), SUB(𝑐, 0), SUB(𝑓, 0))
         while 𝑝.TYPE in [startType, ("Fee", "transaction")]
             @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent purchase amount currency!")
+            pay, rec, fee, eff = SUB(𝑓, 0), SUB(𝑐, 0), SUB(𝑐, 0), SUB(𝑓, 0)
             if 𝑝.COIN == 𝑓
-                rec, fee = SUB(𝑐, 0), SUB(𝑐, 0)
                 if 𝑝.TYPE[1] == "Buy"
-                    pay, eef = SUB(𝑝.COIN, 𝑝.AMNT[2]), SUB(𝑓, 0)
+                    pay = SUB(𝑝.COIN, 𝑝.AMNT[2])
                 elseif 𝑝.TYPE[1] == "Fee"
-                    pay, eef = SUB(𝑓, 0), SUB(𝑝.COIN, 𝑝.AMNT[2])
+                    eef = SUB(𝑝.COIN, 𝑝.AMNT[2])
                 end
             elseif 𝑝.COIN == 𝑐
-                pay, eef = SUB(𝑓, 0), SUB(𝑓, 0)
                 if 𝑝.TYPE[1] == "Buy"
-                    rec, fee = SUB(𝑝.COIN, 𝑝.AMNT[2]), SUB(𝑐, 0)
+                    rec = SUB(𝑝.COIN, 𝑝.AMNT[2])
                 elseif 𝑝.TYPE[1] == "Fee"
-                    rec, fee = SUB(𝑐, 0), SUB(𝑝.COIN, 𝑝.AMNT[2])
+                    fee = SUB(𝑝.COIN, 𝑝.AMNT[2])
                 end
             end
             oper += 𝒐𝒑Buy(pay, rec, fee, eef; date = 𝑝.DATE)
@@ -267,8 +266,8 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
         i, 𝑝 = 0, ST[𝑖]
         oper = 𝒐𝒑Sell(SUB(𝑐, 0), SUB(𝑓, 0), SUB(𝑓, 0))
         while 𝑝.TYPE in [startType, ("Fee", "transaction")]
-            pay, rec, fee = SUB(𝑐, 0), SUB(𝑓, 0), SUB(𝑓, 0)
             @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent purchase amount currency!")
+            pay, rec, fee = SUB(𝑐, 0), SUB(𝑓, 0), SUB(𝑓, 0)
             if 𝑝.COIN == 𝑓
                 if 𝑝.TYPE[1] == "Seℓ"
                     rec = SUB(𝑝.COIN, 𝑝.AMNT[2])
@@ -292,27 +291,22 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
         oper = 𝒐𝒑Xch(SUB(𝑎, 0), SUB(𝑟, 0), SUB(𝑟, 0), SUB(𝑎, 0))
         while 𝑝.TYPE in [startType, ("Fee", "transaction")]
             @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent purchase amount currency!")
+            pay, rec, fee, eef = SUB(𝑎, 0), SUB(𝑟, 0), SUB(𝑟, 0), SUB(𝑎, 0)
             if 𝑝.COIN == 𝑎
                 if 𝑝.TYPE[1] == "Buy"
-                    pay, eef = SUB(𝑝.COIN, 𝑝.AMNT[2]), SUB(𝑎, 0)
-                    rec, fee = SUB(𝑟, 0), SUB(𝑟, 0)
+                    pay = SUB(𝑝.COIN, 𝑝.AMNT[2])
                 elseif 𝑝.TYPE[1] == "Sell"
-                    pay, eef = SUB(𝑟, 0), SUB(𝑟, 0)
-                    rec, fee = SUB(𝑝.COIN, 𝑝.AMNT[2]), SUB(𝑎, 0)
+                    rec = SUB(𝑝.COIN, 𝑝.AMNT[2])
                 elseif 𝑝.TYPE[1] == "Fee"
-                    pay, eef = SUB(𝑎, 0), SUB(𝑝.COIN, 𝑝.AMNT[2])
-                    rec, fee = SUB(𝑟, 0), SUB(𝑟, 0)
+                    eef = SUB(𝑝.COIN, 𝑝.AMNT[2])
                 end
             elseif 𝑝.COIN == 𝑟
                 if 𝑝.TYPE[1] == "Buy"
-                    pay, eef = SUB(𝑎, 0), SUB(𝑎, 0)
-                    rec, fee = SUB(𝑝.COIN, 𝑝.AMNT[2]), SUB(𝑟, 0)
+                    rec = SUB(𝑝.COIN, 𝑝.AMNT[2])
                 elseif 𝑝.TYPE[1] == "Sell"
-                    pay, eef = SUB(𝑝.COIN, 𝑝.AMNT[2]), SUB(𝑟, 0)
-                    rec, fee = SUB(𝑎, 0), SUB(𝑎, 0)
+                    pay = SUB(𝑝.COIN, 𝑝.AMNT[2])
                 elseif 𝑝.TYPE[1] == "Fee"
-                    pay, eef = SUB(𝑎, 0), SUB(𝑎, 0)
-                    rec, fee = SUB(𝑟, 0), SUB(𝑝.COIN, 𝑝.AMNT[2])
+                    fee = SUB(𝑝.COIN, 𝑝.AMNT[2])
                 end
             end
             oper += 𝒐𝒑Xch(pay, rec, fee, eef; date = 𝑝.DATE)
