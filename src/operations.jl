@@ -275,7 +275,27 @@ export 𝒐𝒑Buy
 #                                          𝒐𝒑Sell object                                           #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
-# 𝒐𝒑Sell object
+"""
+`struct 𝒐𝒑Sell <: AbstractOP`\n
+Sell operation object, that can be used as a functor for crypto purchases:
+
+Suppose `NDAX` holds the following balance in one's account:
+
+```julia
+julia> NDAX
+      +700.0000000000    BRL (      +700.00 BRL)
+        +0.0450000000    ETH (      +500.00 BRL)
+```
+
+One then sells 0.04 ETH for 500 BRL, with a 10 BRL fee. This transaction can be executed as
+follows, as to update one's `NDAX` balance (as well as computing the transaction's loss or
+profit) to:
+
+```julia
+julia> 
+```
+
+"""
 struct 𝒐𝒑Sell <: AbstractOP
     pay::SUB
     rec::SUB
