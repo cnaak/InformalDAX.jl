@@ -250,3 +250,18 @@ end
 # export
 export accumGroupTrans!
 
+# Run operations
+function run!(sBal::MTB, oBal::Union{Nothing, MTB}, TR::Vector{AbstractOP})
+    for x in TR
+        if x isa 𝒐𝒑Ini
+            sBal = x()
+        elseif x isa 𝒐𝒑Dep
+            sBal = x(sBal, oBal)[1]
+        end
+    end
+    return sBal
+end
+
+# export
+export run!
+
