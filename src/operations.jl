@@ -292,6 +292,13 @@ follows, as to update one's `NDAX` balance (as well as computing the transaction
 profit) to:
 
 ```julia
+julia> x = 𝒐𝒑Sell(SUB(:ETH, 0.04), SUB(:BRL, 500), SUB(:BRL, 10))
+Crypto Sale Operation resulting on Fiat currency with
+   - Earliest order date ..: 2025-04-28T22:24:39.066
+   - Payment amount .......:         +0.0400000000    ETH
+   - Purchase amount ......:       +500.00 BRL
+   - Fee amount ...........:        +10.00 BRL
+
 julia> 
 ```
 
@@ -315,7 +322,7 @@ function (x::𝒐𝒑Sell)(sBal::MTB)::Tuple{MTB,SUB,SUB}
     sBal, PAY = sBal - x.pay            # Computes payment tracking / discounts payment
     REC = x.rec - x.fee                 # Mundane (untracked) fiat subtraction
     # Calculates loss and profit
-    loss, prof = REC > PAY.fiat ? (SUB(symb(fee)), REC - PAY.fiat) : (PAY.fiat - REC, SUB(symb(fee)))
+    loss, prof = REC > PAY.fiat ? (SUB(symb(x.fee)), REC - PAY.fiat) : (PAY.fiat - REC, SUB(symb(x.fee)))
     # Credits receivings to already discounted payment / returns results
     return (sBal + STB(REC, REC), loss, prof)
 end
