@@ -6,10 +6,11 @@
 module InformalDAX
 
 # Imports
-using Printf
-using FixedPointDecimals
+using Reexport
+@reexport using Printf
+@reexport using FixedPointDecimals
+@reexport using Dates
 using Currencies
-using Dates
 
 # Includes - abstract supertypes
 include("abstract.jl")
