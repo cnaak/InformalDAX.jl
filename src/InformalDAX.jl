@@ -17,11 +17,11 @@ include("abstract.jl")
 # finance numerical types
 include("finance.jl")
 
-# statement utils
-include("statement.jl")
-
 # rolling, fiat-tracking single/multi-currency balances
 include("balances.jl")
+
+# statement utils
+include("statement.jl")
 
 # Operations
 include("operations.jl")
