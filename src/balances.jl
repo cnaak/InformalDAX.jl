@@ -83,8 +83,8 @@ end
 end
 
 # Left/right scalar multiplication
-*(x::SUB, y::DECIM) = SUB(x.cur, x.bal * y)
-*(y::DECIM, x::SUB) = x * y
+*(x::SUB, y::Real) = SUB(x.cur, x.bal * y)
+*(y::Real, x::SUB) = x * y
 
 # isless
 isless(x::SUB, y::SUB) = begin
@@ -126,7 +126,7 @@ end
 
 # outer constructors
 STB(symb::NTuple{2,Symbol},
-    bare::NTuple{2,Union{SFD,DECIM}} = (zero(SFD), zero(SFD))) = begin
+    bare::NTuple{2,Union{SFD,Real}} = (0, 0)) = begin
     STB(SUB(symb[1], bare[1]), SUB(symb[2], bare[2]))
 end
 
