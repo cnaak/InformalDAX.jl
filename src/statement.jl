@@ -271,8 +271,13 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
         if ST[𝑖].TYPE[1] in ["Deposit", "Redeemed"]
             𝑖 = 𝑥(𝑖, Dep())
         elseif ST[𝑖].TYPE[1] in ["Buy",]
-            𝑎, 𝑏 = [Symbol(j) for j in split(startType[2], "/")]
-            𝑖 = 𝑥(𝑖, Buy(ST[𝑖].TYPE))
+            𝑎, 𝑏 = [Symbol(j) for j in split(ST[𝑖].TYPE[2], "/")]
+            𝑠 = sum([isFiat(𝑘) for 𝑘 in (𝑎, 𝑏)])
+            if 𝑠 == 1
+                𝑖 = 𝑥(𝑖, Buy(ST[𝑖].TYPE))
+            elseif 𝑠 == 0
+                #𝑖 = 𝑥(𝑖, Buy(ST[𝑖].TYPE))
+            end
         else
             𝑖 = 𝑥(𝑖, 1)
         end
