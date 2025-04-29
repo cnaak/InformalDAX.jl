@@ -238,14 +238,15 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
     𝑖 = fwd ? 1 : ℓ
     isBound(ind) = 1 <= ind <= ℓ
     append!(TR, [𝒐𝒑Ini(PREV, date = 𝑥(ST[𝑖].DATE, -Day(1)))])
-    #while isBound(𝑖)
-    #    if ST[𝑖].TYPE[1] in ["Deposit", "Redeemed"]
-    #        𝑖 = 𝑥(𝑖, Dep())
-    #    elseif
-    #        ...
-    #    end
-    #end
+    while isBound(𝑖)
+        if ST[𝑖].TYPE[1] in ["Deposit", "Redeemed"]
+            𝑖 = 𝑥(𝑖, Dep())
+        else
+            𝑖 = 𝑥(𝑖, 1)
+        end
+    end
 end
 
-
+# export
+export accumGroupTrans!
 
