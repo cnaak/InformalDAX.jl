@@ -206,7 +206,33 @@ export 𝒐𝒑Draw
 #                                           𝒐𝒑Buy object                                           #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
-# 𝒐𝒑Buy object
+"""
+`struct 𝒐𝒑Buy <: AbstractOP`\n
+Buy operation object, that can be used as a functor for crypto purchases:
+
+Suppose `NDAX` holds the following balance in one's account:
+
+```julia
+julia> NDAX
+      +1200.0000000000    BRL (     +1200.00 BRL)
+```
+
+One then purchases 0.05 ETH by paying 500 BRL, with a 0.005 ETH fee. This transaction can be
+executed as follows, as to update one's `NDAX` balance to:
+
+```julia
+julia> NDAX = 𝒐𝒑Buy(SUB(:BRL, 500), SUB(:ETH, 5//100), SUB(:ETH, 5//1000))(NDAX)
+      +700.0000000000    BRL (      +700.00 BRL)
+        +0.0450000000    ETH (      +500.00 BRL)
+```
+
+Note that the total BRL amount was conserved (since there were no fees in BRL); however the
+incidence of fee upon the ETH amount has caused it's balance to drop from the purchased 0.05 ETH
+to 0.045 ETH.
+
+Also, it is worth noting the effect of tracking: the balance of 0.045 ETH costed the account
+owner 500 BRL, which is easily read in the accompanying data to the principal ETH balance.
+"""
 struct 𝒐𝒑Buy <: AbstractOP
     pay::SUB
     rec::SUB
