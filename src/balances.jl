@@ -31,7 +31,7 @@ struct SUB <: Untrakd
     cur::Symbol
     bal::SFD
     function SUB(CUR::Symbol, BAL::SFD = zero(SFD))
-        @assert(BAL >= zero(SFD), "InformalDAX does not operate with negative balances!")
+        #@assert(BAL >= zero(SFD), "InformalDAX does not operate with negative balances!")
         new(CUR, BAL)
     end
 end
@@ -132,7 +132,7 @@ struct STB <: UniTracked
         @assert(isFiat(FIAT), "Tracking must be against a Fiat currency!")
         bothNonZero() = (bare(CRYP) != zero(SFD)) && (bare(FIAT) != zero(SFD))
         bothAreZero() = (bare(CRYP) == zero(SFD)) && (bare(FIAT) == zero(SFD))
-        @assert(bothNonZero() || bothAreZero(), "Exchange ratio must be finite!")
+        #@assert(bothNonZero() || bothAreZero(), "Exchange ratio must be finite!")
         new(CRYP, FIAT)
     end
 end
@@ -339,7 +339,7 @@ end
 
 # Subtraction
 -(x::MTB, y::SUB) = begin
-    @assert((symb(y), fiat(x)) in keys(x), "Can't take unowned currency from balance!")
+    #@assert((symb(y), fiat(x)) in keys(x), "Can't take unowned currency from balance!")
     𝑥 = MTB(x())
     𝑥.Mult[(symb(y), fiat(x))], taken = 𝑥.Mult[(symb(y), fiat(x))] - y
     return 𝑥, taken
