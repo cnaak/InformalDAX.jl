@@ -421,6 +421,7 @@ function run!(TR::Vector{AbstractOP},
     LOSS = AbstractBL[]
     PROF = AbstractBL[]
     for x in TR
+        @show x
         if x isa 𝒐𝒑Ini
             nBal = x()
         elseif x isa 𝒐𝒑Dep
