@@ -27,8 +27,5 @@ include("statement.jl")
 # Operations
 include("operations.jl")
 
-# User functions
-# include("user.jl")
-
 # Module
 end
