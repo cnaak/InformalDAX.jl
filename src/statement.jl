@@ -308,7 +308,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
             @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent purchase amount currency!")
             pay, rec, fee = SUB(𝑐, 0), SUB(𝑓, 0), SUB(𝑓, 0)
             if 𝑝.COIN == 𝑓
-                if 𝑝.TYPE[1] == "Seℓ"
+                if 𝑝.TYPE[1] == "Sell" # horribly hidden bug 8-O
                     rec = SUB(𝑝.COIN, 𝑝.AMNT[2])
                 elseif 𝑝.TYPE[1] == "Fee"
                     fee = SUB(𝑝.COIN, 𝑝.AMNT[2])
