@@ -524,11 +524,11 @@ function (x::𝒐𝒑Recv)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple
     if oBal isa Nothing
         # Don't have to update oBal
         # But no tracking info either (use approximation)
-        sBal += STB(x.rcv, x.apr)   # Aggregates aproximate tracking into received amount
+        sBal += STB(x.rcv - x.fee, x.apr)   # Aggregates aproximate tracking into received amount
         return sBal, nothing
     else
-        𝑎, 𝑏 = oBal - x.rcv     # This makes 𝑏 as the transfered amount (with tracking)
-        𝑎    = (𝑎 - x.fee)[1]   # This makes 𝑎 as the tracked balance for oBal
+        𝑎, 𝑏 = oBal - STB(x.rcv, x.apr) # This makes 𝑏 as the transfered amount (with tracking)
+        𝑎    = (𝑎 - x.fee)[1]           # This makes 𝑎 as the tracked balance for oBal
         sBal += 𝑏
         return sBal, 𝑎
     end
