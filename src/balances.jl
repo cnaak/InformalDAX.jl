@@ -414,12 +414,12 @@ end
 -(x::MTB, y::STB) = begin
     @assert(fiat(x) == symb(y.fiat), "Can't operate on different fiat trackings!")
     𝑥 = MTB(x())
-    if symb(y) in keys(x)
+    if symb(y) in keys(𝑥)
         𝑥.Mult[symb(y)], taken = -(𝑥.Mult[symb(y)], y)
     else
-        𝑥.Mult[symb(y)] = -y
+        𝑥.Mult[symb(y)], taken = -y, y
     end
-    return 𝑥
+    return 𝑥, taken
 end
 
 # show/display
