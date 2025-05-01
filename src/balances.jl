@@ -4,6 +4,7 @@
 
 import Base: show, +, -, *, ==, isless
 import Base: keys
+import Base: zero, one
 
 
 #--------------------------------------------------------------------------------------------------#
@@ -32,16 +33,26 @@ struct SUB <: Untrakd
     bal::SFD
     function SUB(CUR::Symbol, BAL::SFD = zero(SFD))
         #@assert(BAL >= zero(SFD), "InformalDAX does not operate with negative balances!")
-        new(CUR, BAL)
+        cur = string(CUR)
+        if length(cur) > CRYP_SYMB_MAX_LEN
+            j = i = firstindex(cur)
+            for k in 2:6
+                i = nextind(cur, i)
+            end
+            cro = cur[j:i]
+            new(Symbol(cro), BAL)
+        else
+            new(Symbol(cur), BAL)
+        end
     end
 end
 
 # Outer constructors
 function SUB(CUR::Symbol, BAL::Real)
-    DENO = 10000000000
+    DENO = 100000000
     NUME = Int64(
         round(
-            parse(BigFloat, @sprintf("%.10f", BAL)) * DENO,
+            parse(BigFloat, @sprintf("%.8f", BAL)) * DENO,
             RoundNearest,
             digits=0
         )
@@ -62,7 +73,7 @@ symb(x::SUB) = x.cur
 name(x::SUB) = string(symb(x))
 
 # decs function to return the currency number of decimal places
-decs(x::SUB) = isFiat(x) ? Currencies.unit(x.cur) : 10
+decs(x::SUB) = isFiat(x) ? Currencies.unit(x.cur) : 8
 
 # Returns true if x.cur is a fiat currency
 isFiat(x::SUB) = x.cur in Currencies.allsymbols()
@@ -73,15 +84,26 @@ isCryp(x::SUB) = !isFiat(x)
 # Pretty string function
 pretty(x::SUB) = begin
     isCryp(x) ?
-        @sprintf("%+*.*f %6s", 11 + decs(x), decs(x), bare(x), name(x)) :
-        @sprintf("%+*.*f %3s", 11 + decs(x), decs(x), bare(x), name(x))
+        @sprintf("%+*.*f %6s", 13 + decs(x), decs(x), bare(x), name(x)) :
+        @sprintf("%+*.*f %3s", 13 + decs(x), decs(x), bare(x), name(x))
 end
 
 # Uniformly pretty
-unipre(x::SUB) = @sprintf("%+21.10f %6s", bare(x), name(x))
+unipre(x::SUB) = @sprintf("%+21.8f %6s", bare(x), name(x))
+
+# zero function
+zero(x::SUB) = SUB(symb(x), zero(SFD))
+zero(::Type{SUB}, s::Symbol) = SUB(s, zero(SFD))
+
+# one function
+one(x::SUB) = SUB(symb(x), one(SFD))
+one(::Type{SUB}, s::Symbol) = SUB(s, one(SFD))
 
 # export
-export SUB, bare, symb, name, decs, isFiat, isCryp
+export SUB, bare, symb, name, decs, isFiat, isCryp, zero, one
+
+# Unary minus
+-(x::SUB) = SUB(symb(x), -bare(x))
 
 # Addition
 +(x::SUB, y::SUB) = begin
@@ -172,21 +194,57 @@ function pretty(x::STB)
     @sprintf("%s (%s)", unipre(x.cryp), pretty(x.fiat))
 end
 
+# zero function
+zero(x::STB) = STB(zero(x.cryp), zero(x.fiat))
+zero(::Type{STB}, c::Symbol, f::Symbol) = STB(zero(SUB, c), zero(SUB, f))
+
+# one function
+function one(x::STB)
+    if x.cryp == zero(x.cryp)
+        STB(one(x.cryp), one(x.fiat))
+    else
+        inv(bare(x.cryp)) * x
+    end
+end
+
+# one function
+function one(::Type{STB}, c::Symbol, f::Symbol, x_r::Real = 1)
+    STB(one(SUB, c), x_r * one(SUB, f))
+end
+
+# Left/right scalar multiplication
+*(x::STB, y::Real) = STB(x.cryp * y, x.fiat * y)
+*(y::Real, x::STB) = x * y
+
+# Unary minus
+-(x::STB) = STB(-x.cryp, -x.fiat)
+
 # Addition
 +(x::STB, y::STB) = begin
     @assert(symb(x) == symb(y), "Can't add different tracking pair balances!")
     STB(x.cryp + y.cryp, x.fiat + y.fiat)
 end
 
+# Reference rate subtraction
+-(x::STB, ref::STB) = begin
+    @assert(symb(x.fiat) == symb(ref.fiat), "Can't subtract different fiat trackings!")
+    @assert(symb(x.cryp) == symb(ref.cryp), "Can't subtract different single crypto trackings!")
+    return -(x, ref.cryp, ref)  # Explicitly falls back to reference rate subtraction
+end
+
 # Subtraction
 """
 # InformalDAX's "tracked" subtraction of crypto assets
 
-`-(x::STB, y::SUB)::Tuple{STB,STB}`\n
+`-(x::STB, y::SUB, ref::Union{STB,Nothing} = nothing)::Tuple{STB,STB}`\n
 Tracked subtraction \$x - y\$ that returns a `(result, taken)` tuple, where `result` is the
 resulting tracked subtraction, and `taken` is the tracked taken amount based on `y` (an
 untracked balance), such that `taken.cryp == y`, and `taken.fiat` is adjusted to the proper
 ratio of purchasing fiat currency.
+
+The `ref` tracking serves as reference (not mandatory) crypto-to-fiat exchange rate, and is only
+used if the rate cannot be calculated from `x` (for instance `x == STB(SUB(:cryp, 0), SUB(:fiat,
+0)) --> true`).
 
 ## Example:
 
@@ -217,14 +275,21 @@ Meaning the retained balance of `0.009 BTC` retained `882 USD` in fiat purchase 
 in `myBTCBal`; and the taken amount of `0.001 BTC` represents a fraction worth of `98 USD` of
 its purchase price in fiat currency—the data in `xfer`.
 """
--(x::STB, y::SUB)::Tuple{STB,STB} = begin
+-(x::STB, y::SUB, ref::Union{STB,Nothing} = nothing)::Tuple{STB,STB} = begin
     @assert(symb(x)[1] == symb(y), "Can't sub different tracking pair balances!")
-    dif = x.cryp - y                    # the difference
-    r_d = bare(dif) / bare(x.cryp)      # the 0 <= difference ratio <= 1
-    trk = r_d * x.fiat                  # the tracked remaining fiat
-    RES = STB(dif, trk)                 # the tracked subtraction result
-    TKN = STB(  y, x.fiat - trk)        # the tracked taken value
-    return (RES, TKN)
+    if (x.cryp == zero(x.cryp)) && (ref isa STB)
+        @assert(symb(x) == symb(ref), "Can't reference sub different tracking pair balances!")
+        x_r = bare(ref.fiat) / bare(ref.cryp)
+        Y   = STB(y, SUB(symb(ref.fiat), x_r * bare(y)))
+        return -Y, Y
+    else
+        dif = x.cryp - y                    # the difference
+        r_d = bare(dif) / bare(x.cryp)      # the 0 <= difference ratio <= 1
+        trk = r_d * x.fiat                  # the tracked remaining fiat
+        RES = STB(dif, trk)                 # the tracked subtraction result
+        TKN = STB(  y, x.fiat - trk)        # the tracked taken value
+        return (RES, TKN)
+    end
 end
 
 # show/display
@@ -341,8 +406,20 @@ end
 -(x::MTB, y::SUB) = begin
     #@assert((symb(y), fiat(x)) in keys(x), "Can't take unowned currency from balance!")
     𝑥 = MTB(x())
-    𝑥.Mult[(symb(y), fiat(x))], taken = 𝑥.Mult[(symb(y), fiat(x))] - y
+    𝑥.Mult[(symb(y), fiat(𝑥))], taken = 𝑥.Mult[(symb(y), fiat(𝑥))] - y
     return 𝑥, taken
+end
+
+# STB Subtraction
+-(x::MTB, y::STB) = begin
+    @assert(fiat(x) == symb(y.fiat), "Can't operate on different fiat trackings!")
+    𝑥 = MTB(x())
+    if symb(y) in keys(x)
+        𝑥.Mult[symb(y)], taken = -(𝑥.Mult[symb(y)], y)
+    else
+        𝑥.Mult[symb(y)] = -y
+    end
+    return 𝑥
 end
 
 # show/display
