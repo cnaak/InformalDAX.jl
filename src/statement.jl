@@ -420,8 +420,10 @@ function run!(TR::Vector{AbstractOP},
               bBal::Union{Nothing, MTB})
     LOSS = AbstractBL[]
     PROF = AbstractBL[]
+    count = 0
     for x in TR
-        @show x
+        count += 1
+        @show count, x
         if x isa 𝒐𝒑Ini
             nBal = x()
         elseif x isa 𝒐𝒑Dep
