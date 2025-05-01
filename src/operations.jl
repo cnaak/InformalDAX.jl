@@ -359,9 +359,9 @@ end
 function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Sell)
     println("Crypto Sale Operation resulting on Fiat currency with")
     println("   - Earliest order date ..: ", x.date)
-    println("   - Payment amount .......: ", unipre(x.pay))
-    println("   - Purchase amount ......: ", pretty(x.rec))
-    println("   - Fee amount ...........: ", pretty(x.fee))
+    println("   - Payment amount .......: ", pretty(x.pay))
+    println("   - Purchase amount ......: ", unipre(x.rec))
+    println("   - Fee amount ...........: ", unipre(x.fee))
 end
 
 # export
