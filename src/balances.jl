@@ -406,7 +406,11 @@ end
 -(x::MTB, y::SUB) = begin
     #@assert((symb(y), fiat(x)) in keys(x), "Can't take unowned currency from balance!")
     𝑥 = MTB(x())
-    𝑥.Mult[(symb(y), fiat(𝑥))], taken = 𝑥.Mult[(symb(y), fiat(𝑥))] - y
+    if symb(y) == fiat(𝑥)
+        ref = one(STB, symb(y), fiat(𝑥))
+        𝑥.Mult[(symb(y), fiat(𝑥))], taken = -(𝑥.Mult[(symb(y), fiat(𝑥))], y, ref)
+    else
+        𝑥.Mult[(symb(y), fiat(𝑥))], taken = -(𝑥.Mult[(symb(y), fiat(𝑥))], y)
     return 𝑥, taken
 end
 
