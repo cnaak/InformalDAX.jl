@@ -411,6 +411,7 @@ end
         𝑥.Mult[(symb(y), fiat(𝑥))], taken = -(𝑥.Mult[(symb(y), fiat(𝑥))], y, ref)
     else
         𝑥.Mult[(symb(y), fiat(𝑥))], taken = -(𝑥.Mult[(symb(y), fiat(𝑥))], y)
+    end
     return 𝑥, taken
 end
 
