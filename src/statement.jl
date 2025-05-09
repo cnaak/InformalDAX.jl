@@ -374,6 +374,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
     end
     # function Conv - Convert - always a 3-line pay/fee/rec in unknown order
     function Conv()
+        pay = rec = fee = 0
         tr = ST[𝑖:𝑖+2]
         for 𝑡 in tr
             if isFiat(𝑡.COIN)
