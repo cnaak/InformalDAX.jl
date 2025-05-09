@@ -73,7 +73,7 @@ end
 function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Ini)
     println("Balance Initialization Operation with")
     println("   - Earliest order date ..: ", x.date)
-    println("   - Previous balance .....: ", pretty(x.prev))
+    println("   - Previous balance .....: \n", pretty(x.prev))
 end
 
 # export
@@ -118,12 +118,12 @@ struct 𝒐𝒑Dep <: AbstractOP
 end
 
 # Functor with functionality
-function (x::𝒐𝒑Dep)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}
+function (x::𝒐𝒑Dep)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple{MTB,Union{MTB,Nothing}}
     dBal = STB(x.amt, x.amt)
     if oBal isa Nothing
-        return sBal + dBal, MTB(dBal)
+        return sBal + dBal, oBal
     else
-        return sBal + dBal, (oBal - x.amt)[1]
+        return sBal + dBal, (oBal - dBal)[1]
     end
 end
 
