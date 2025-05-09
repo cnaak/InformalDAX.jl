@@ -372,6 +372,24 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
         append!(TR, [oper])
         return i
     end
+    # function Conv - Convert - always a 3-line pay/fee/rec in unknown order
+    function Conv()
+        tr = ST[𝑖:𝑖+2]
+        for 𝑡 in tr
+            if isFiat(𝑡.COIN)
+                if 𝑡.AMNT[1]
+                    fee = SUB(𝑡.COIN, 𝑡.AMNT[2])
+                else
+                    rec = SUB(𝑡.COIN, 𝑡.AMNT[2])
+                end
+            else
+                pay = SUB(𝑡.COIN, 𝑡.AMNT[2])
+            end
+        end
+        oper = 𝒐𝒑Sell(pay, rec, fee; date = tr[1].DATE)
+        append!(TR, [oper])
+        return 3
+    end
     # -------------
     ℓ = length(ST)
     𝑥 = fwd ? (+) : (-)
@@ -387,7 +405,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
             𝑖 = 𝑥(𝑖, Snd())
         elseif ST[𝑖].TYPE[1] in ["Receive", ]
             𝑖 = 𝑥(𝑖, Recv())
-        elseif ST[𝑖].TYPE[1] in ["Buy",]
+        elseif ST[𝑖].TYPE[1] in ["Buy", ]
             𝑎, 𝑏 = [Symbol(j) for j in split(ST[𝑖].TYPE[2], "/")]
             𝑠 = sum([isFiat(𝑘) for 𝑘 in (𝑎, 𝑏)])
             if 𝑠 == 1
@@ -403,8 +421,10 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
             elseif 𝑠 == 0
                 𝑖 = 𝑥(𝑖, Xch(ST[𝑖].TYPE))
             end
+        elseif ST[𝑖].TYPE[1] in ["Convert", ]
+            𝑖 = 𝑥(𝑖, Conv())
         else
-            println("$(ST[𝑖].TYPE) $(𝑖)")
+            println("Not implemented $(ST[𝑖].TYPE) $(𝑖)")
             𝑖 = 𝑥(𝑖, 1)
         end
     end
@@ -423,7 +443,6 @@ function run!(TR::Vector{AbstractOP},
     count = 0
     for x in TR
         count += 1
-        @show count, x
         if x isa 𝒐𝒑Ini
             nBal = x()
         elseif x isa 𝒐𝒑Dep
