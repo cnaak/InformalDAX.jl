@@ -29,11 +29,11 @@ isless(x::𝕆, y::ℙ) where {𝕆 <: AbstractOP, ℙ <: AbstractOP} = isless(x
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                           𝒐𝒑Ini object                                           #
+#                                           opINIT object                                          #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
 """
-`struct 𝒐𝒑Ini <: AbstractOP`\n
+`struct opINIT <: AbstractOP`\n
 Initialization operation object, that can be used as a functor for balance initializations.
 
 Suppose at the very beginning, one opens a NovaDAX account (and therefore it's statement) with
@@ -49,49 +49,49 @@ julia> a = SUB(:BRL, 3000)
 julia> A = MTB(STB(a, a))
      +3000.0000000000    BRL (     +3000.00 BRL)
 
-julia> NDAX, BANK = [𝒐𝒑Ini()(), 𝒐𝒑Ini(A)()]
+julia> NDAX, BANK = [opINIT()(), opINIT(A)()]
 2-element Vector{MTB}:
          +0.0000000000    BRL (        +0.00 BRL)
       +3000.0000000000    BRL (     +3000.00 BRL)
 ```
 """
-struct 𝒐𝒑Ini <: AbstractOP
+struct opINIT <: AbstractOP
     prev::MTB
     date::DateTime
-    𝒐𝒑Ini(prev::MTB = emptyRFB(); date::DateTime = now()) = new(prev, date)
+    opINIT(prev::MTB = emptyRFB(); date::DateTime = now()) = new(prev, date)
 end
 
 # Functor with functionality
-function (x::𝒐𝒑Ini)()::MTB
+function (x::opINIT)()::MTB
     return MTB(x.prev())
 end
 
 # Addition
-+(x::𝒐𝒑Ini, y::𝒐𝒑Ini) = 𝒐𝒑Ini(x.prev + y.prev; date = x.date < y.date ? x.date : y.date)
++(x::opINIT, y::opINIT) = opINIT(x.prev + y.prev; date = x.date < y.date ? x.date : y.date)
 
 # show/display
-function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Ini)
+function Base.show(io::IO, ::MIME"text/plain", x::opINIT)
     println("Balance Initialization Operation with")
     println("   - Earliest order date ..: ", x.date)
     println("   - Previous balance .....: \n", pretty(x.prev))
 end
 
 # export
-export 𝒐𝒑Ini
+export opINIT
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                           𝒐𝒑Dep object                                           #
+#                                           opDEPO object                                          #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
 """
-`struct 𝒐𝒑Dep <: AbstractOP`\n
+`struct opDEPO <: AbstractOP`\n
 Deposit operation object, that can be used as a functor for fiat deposits:
 
 Suppose `NDAX` and `BANK` hold the tracked balances of one's NovaDAX and "BANK" accounts, like so:
 
 ```julia
-julia> NDAX, BANK = [𝒐𝒑Ini()(), 𝒐𝒑Ini(A)()]
+julia> NDAX, BANK = [opINIT()(), opINIT(A)()]
 2-element Vector{MTB}:
          +0.0000000000    BRL (        +0.00 BRL)
       +3000.0000000000    BRL (     +3000.00 BRL)
@@ -100,7 +100,7 @@ julia> NDAX, BANK = [𝒐𝒑Ini()(), 𝒐𝒑Ini(A)()]
 A deposit object in the amount of 1200 BRL can be created and execute the transaction as follows:
 
 ```julia
-julia> NDAX, BANK = [𝒐𝒑Dep(SUB(:BRL, 1200))(NDAX, BANK)...]
+julia> NDAX, BANK = [opDEPO(SUB(:BRL, 1200))(NDAX, BANK)...]
 2-element Vector{MTB}:
       +1200.0000000000    BRL (     +1200.00 BRL)
       +1800.0000000000    BRL (     +1800.00 BRL)
@@ -108,17 +108,17 @@ julia> NDAX, BANK = [𝒐𝒑Dep(SUB(:BRL, 1200))(NDAX, BANK)...]
 
 So that balances update to 1200 BRL and 1800 BRL, respectively.
 """
-struct 𝒐𝒑Dep <: AbstractOP
+struct opDEPO <: AbstractOP
     amt::SUB
     date::DateTime
-    𝒐𝒑Dep(amt::SUB; date::DateTime = now()) = begin
+    opDEPO(amt::SUB; date::DateTime = now()) = begin
         @assert(isFiat(amt), "Deposit operations must, by definition, be in fiat currency!")
         new(amt, date)
     end
 end
 
 # Functor with functionality
-function (x::𝒐𝒑Dep)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple{MTB,Union{MTB,Nothing}}
+function (x::opDEPO)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple{MTB,Union{MTB,Nothing}}
     dBal = STB(x.amt, x.amt)
     if oBal isa Nothing
         return sBal + dBal, oBal
@@ -128,25 +128,25 @@ function (x::𝒐𝒑Dep)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple{
 end
 
 # Addition
-+(x::𝒐𝒑Dep, y::𝒐𝒑Dep) = 𝒐𝒑Dep(x.amt + y.amt; date = x.date < y.date ? x.date : y.date)
++(x::opDEPO, y::opDEPO) = opDEPO(x.amt + y.amt; date = x.date < y.date ? x.date : y.date)
 
 # show/display
-function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Dep)
+function Base.show(io::IO, ::MIME"text/plain", x::opDEPO)
     println("Fiat Deposit Operation with")
     println("   - Earliest order date ..: ", x.date)
     println("   - Deposit amount .......: ", pretty(x.amt))
 end
 
 # export
-export 𝒐𝒑Dep
+export opDEPO
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                          𝒐𝒑Draw object                                           #
+#                                          opDRAW object                                           #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
 """
-`struct 𝒐𝒑Draw <: AbstractOP`\n
+`struct opDRAW <: AbstractOP`\n
 Draw (Withdraw) operation object, that can be used as a functor for fiat withdrawals:
 
 Suppose `NDAX` and `BANK` hold the tracked balances of one's NovaDAX and "BANK" accounts, like so:
@@ -161,7 +161,7 @@ julia> NDAX, BANK
 A withdraw object in the amount of 1200 BRL can be created and execute the transaction as follows:
 
 ```julia
-julia> NDAX, BANK = [𝒐𝒑Draw(SUB(:BRL, 1200))(NDAX, BANK)...]
+julia> NDAX, BANK = [opDRAW(SUB(:BRL, 1200))(NDAX, BANK)...]
 2-element Vector{MTB}:
          +0.0000000000    BRL (        +0.00 BRL)
       +3000.0000000000    BRL (     +3000.00 BRL)
@@ -169,17 +169,17 @@ julia> NDAX, BANK = [𝒐𝒑Draw(SUB(:BRL, 1200))(NDAX, BANK)...]
 
 So that balances update to 0 BRL and 3000 BRL, respectively.
 """
-struct 𝒐𝒑Draw <: AbstractOP
+struct opDRAW <: AbstractOP
     amt::SUB
     date::DateTime
-    𝒐𝒑Draw(amt::SUB; date::DateTime = now()) = begin
+    opDRAW(amt::SUB; date::DateTime = now()) = begin
         @assert(isFiat(amt), "Draw operations must, by definition, be in fiat currency!")
         new(amt, date)
     end
 end
 
 # Functor with fuctionality
-function (x::𝒐𝒑Draw)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}
+function (x::opDRAW)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::NTuple{2,MTB}
     a, b = sBal - x.amt
     if oBal isa Nothing
         return a, MTB(b)
@@ -189,25 +189,25 @@ function (x::𝒐𝒑Draw)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::NTupl
 end
 
 # Addition
-+(x::𝒐𝒑Draw, y::𝒐𝒑Draw) = 𝒐𝒑Draw(x.amt + y.amt; date = x.date < y.date ? x.date : y.date)
++(x::opDRAW, y::opDRAW) = opDRAW(x.amt + y.amt; date = x.date < y.date ? x.date : y.date)
 
 # show/display
-function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Draw)
+function Base.show(io::IO, ::MIME"text/plain", x::opDRAW)
     println("Fiat Withdraw Operation with")
     println("   - Earliest order date ..: ", x.date)
     println("   - Withdrawal amount ....: ", pretty(x.amt))
 end
 
 # export
-export 𝒐𝒑Draw
+export opDRAW
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                           𝒐𝒑Buy object                                           #
+#                                           opPURC object                                          #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
 """
-`struct 𝒐𝒑Buy <: AbstractOP`\n
+`struct opPURC <: AbstractOP`\n
 Buy operation object, that can be used as a functor for crypto purchases:
 
 Suppose `NDAX` holds the following balance in one's account:
@@ -221,7 +221,7 @@ One then purchases 0.05 ETH by paying 500 BRL, with a 0.005 ETH fee. This transa
 executed as follows, as to update one's `NDAX` balance to:
 
 ```julia
-julia> NDAX = 𝒐𝒑Buy(SUB(:BRL, 500), SUB(:ETH, 5//100), SUB(:ETH, 5//1000), SUB(:BRL, 0))(NDAX)
+julia> NDAX = opPURC(SUB(:BRL, 500), SUB(:ETH, 5//100), SUB(:ETH, 5//1000), SUB(:BRL, 0))(NDAX)
       +700.0000000000    BRL (      +700.00 BRL)
         +0.0450000000    ETH (      +500.00 BRL)
 ```
@@ -233,13 +233,13 @@ to 0.045 ETH.
 Also, it is worth noting the effect of tracking: the balance of 0.045 ETH costed the account
 owner 500 BRL, which is easily read in the accompanying data to the principal ETH balance.
 """
-struct 𝒐𝒑Buy <: AbstractOP
+struct opPURC <: AbstractOP
     pay::SUB
     rec::SUB
     fee::SUB
     eef::SUB
     date::DateTime
-    𝒐𝒑Buy(pay::SUB, rec::SUB, fee::SUB, eef::SUB; date::DateTime = now()) = begin
+    opPURC(pay::SUB, rec::SUB, fee::SUB, eef::SUB; date::DateTime = now()) = begin
         @assert(isFiat(pay), "Buy operations must, by definition, be in fiat currency!")
         @assert(isCryp(rec), "Buy operations must, by definition, aquire crypto currency!")
         @assert(isCryp(fee), "First purchase fee must be in crypto currency!")
@@ -251,19 +251,19 @@ struct 𝒐𝒑Buy <: AbstractOP
 end
 
 # Functor with fuctionality
-function (x::𝒐𝒑Buy)(sBal::MTB)::MTB
+function (x::opPURC)(sBal::MTB)::MTB
     REC = STB(x.rec - x.fee, x.pay + x.eef)     # Register total purchase price in tracking object
     return ((sBal + REC) - (x.pay + x.eef))[1]  # Credits receivings and discounts payment
 end
 
 # Addition
-+(x::𝒐𝒑Buy, y::𝒐𝒑Buy) = 𝒐𝒑Buy(x.pay + y.pay,
++(x::opPURC, y::opPURC) = opPURC(x.pay + y.pay,
                               x.rec + y.rec,
                               x.fee + y.fee,
                               x.eef + y.eef; date = x.date < y.date ? x.date : y.date)
 
 # show/display
-function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Buy)
+function Base.show(io::IO, ::MIME"text/plain", x::opPURC)
     println("Crypto Purchase Operation with Fiat currency with")
     println("   - Earliest order date ..: ", x.date)
     println("   - Payment amount .......: ", unipre(x.pay))
@@ -273,15 +273,15 @@ function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Buy)
 end
 
 # export
-export 𝒐𝒑Buy
+export opPURC
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                          𝒐𝒑Sell object                                           #
+#                                          opSELL object                                           #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
 """
-`struct 𝒐𝒑Sell <: AbstractOP`\n
+`struct opSELL <: AbstractOP`\n
 Sell operation object, that can be used as a functor for crypto sales:
 
 Suppose `NDAX` holds the following balance in one's account:
@@ -297,7 +297,7 @@ follows, as to update one's `NDAX` balance (as well as computing the transaction
 profit) to:
 
 ```julia
-julia> x = 𝒐𝒑Sell(SUB(:ETH, 0.04), SUB(:BRL, 500), SUB(:BRL, 10))
+julia> x = opSELL(SUB(:ETH, 0.04), SUB(:BRL, 500), SUB(:BRL, 10))
 Crypto Sale Operation resulting on Fiat currency with
    - Earliest order date ..: 2025-04-28T22:24:39.066
    - Payment amount .......:         +0.0400000000    ETH
@@ -326,12 +326,12 @@ julia> sum([i[2].fiat for i in NDAX.Mult])
      +1245.56 BRL
 ```
 """
-struct 𝒐𝒑Sell <: AbstractOP
+struct opSELL <: AbstractOP
     pay::SUB
     rec::SUB
     fee::SUB
     date::DateTime
-    𝒐𝒑Sell(pay::SUB, rec::SUB, fee::SUB; date::DateTime = now()) = begin
+    opSELL(pay::SUB, rec::SUB, fee::SUB; date::DateTime = now()) = begin
         @assert(isCryp(pay), "Sell operations must, by definition, be payed in crypto currency!")
         @assert(isFiat(rec), "Sell operations must, by definition, aquire fiat currency!")
         @assert(isFiat(fee), "Purchase fee must be in crypto currency!")
@@ -341,7 +341,7 @@ struct 𝒐𝒑Sell <: AbstractOP
 end
 
 # Functor with fuctionality
-function (x::𝒐𝒑Sell)(sBal::MTB)::Tuple{MTB,SUB,SUB}
+function (x::opSELL)(sBal::MTB)::Tuple{MTB,SUB,SUB}
     sBal, PAY = sBal - x.pay            # Computes payment tracking / discounts payment
     REC = x.rec - x.fee                 # Mundane (untracked) fiat subtraction
     # Calculates loss and profit
@@ -351,12 +351,12 @@ function (x::𝒐𝒑Sell)(sBal::MTB)::Tuple{MTB,SUB,SUB}
 end
 
 # Addition
-+(x::𝒐𝒑Sell, y::𝒐𝒑Sell) = 𝒐𝒑Sell(x.pay + y.pay,
++(x::opSELL, y::opSELL) = opSELL(x.pay + y.pay,
                                  x.rec + y.rec,
                                  x.fee + y.fee; date = x.date < y.date ? x.date : y.date)
 
 # show/display
-function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Sell)
+function Base.show(io::IO, ::MIME"text/plain", x::opSELL)
     println("Crypto Sale Operation resulting on Fiat currency with")
     println("   - Earliest order date ..: ", x.date)
     println("   - Payment amount .......: ", pretty(x.pay))
@@ -365,15 +365,15 @@ function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Sell)
 end
 
 # export
-export 𝒐𝒑Sell
+export opSELL
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                          𝒐𝒑Send object                                           #
+#                                          opSEND object                                           #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
 """
-`struct 𝒐𝒑Send <: AbstractOP`\n
+`struct opSEND <: AbstractOP`\n
 Send operation object, that can be used as a functor for outbound crypto transfers:
 
 Suppose `NDAX` holds the following balance in one's account:
@@ -397,7 +397,7 @@ julia> PHAN
 This transaction can be executed as follows, as to update one's `NDAX` (and `PHAN`) balance(s):
 
 ```julia
-julia> x = 𝒐𝒑Send(SUB(:ETH, 0.04), SUB(:ETH, 0.004))
+julia> x = opSEND(SUB(:ETH, 0.04), SUB(:ETH, 0.004))
 Crypto Sale Operation resulting on Fiat currency with
    - Earliest order date ..: 2025-04-28T23:23:40.292
    - Send amount ..........:         +0.0400000000    ETH
@@ -412,11 +412,11 @@ julia> NDAX, PHAN = [x(NDAX, PHAN)...]
         +0.3400000000    ETH (     +1694.44 BRL)
 ```
 """
-struct 𝒐𝒑Send <: AbstractOP
+struct opSEND <: AbstractOP
     snd::SUB
     fee::SUB
     date::DateTime
-    𝒐𝒑Send(snd::SUB, fee::SUB; date::DateTime = now()) = begin
+    opSEND(snd::SUB, fee::SUB; date::DateTime = now()) = begin
         @assert(isCryp(snd), "Send operations must, by definition, be sending crypto currency!")
         @assert(snd.cur == fee.cur, "Sending fee must be in the same currency of what's being send!")
         new(snd, fee, date)
@@ -424,7 +424,7 @@ struct 𝒐𝒑Send <: AbstractOP
 end
 
 # Functor with fuctionality
-function (x::𝒐𝒑Send)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple{MTB,MTB}
+function (x::opSEND)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple{MTB,MTB}
     𝑎, 𝑏 = sBal - x.snd     # 𝑏 is sent balance, with tracking; 𝑎 is temporary
     𝑎    = (𝑎 - x.fee)[1]   # 𝑎 is the (already) tracked balance without the taken fee
     if oBal isa Nothing
@@ -435,11 +435,11 @@ function (x::𝒐𝒑Send)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple
 end
 
 # Addition
-+(x::𝒐𝒑Send, y::𝒐𝒑Send) = 𝒐𝒑Send(x.snd + y.snd,
++(x::opSEND, y::opSEND) = opSEND(x.snd + y.snd,
                                  x.fee + y.fee; date = x.date < y.date ? x.date : y.date)
 
 # show/display
-function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Send)
+function Base.show(io::IO, ::MIME"text/plain", x::opSEND)
     println("Crypto Outbound Transfer Operation with")
     println("   - Earliest order date ..: ", x.date)
     println("   - Send amount ..........: ", pretty(x.snd))
@@ -447,15 +447,15 @@ function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Send)
 end
 
 # export
-export 𝒐𝒑Send
+export opSEND
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                          𝒐𝒑Recv object                                           #
+#                                          opRECV object                                           #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
 """
-`struct 𝒐𝒑Recv <: AbstractOP`\n
+`struct opRECV <: AbstractOP`\n
 Recv operation object, that can be used as a functor for inbound crypto transfers.
 
 Depending on available / provided arguments, the inbound fiat tracking can be based either (i)
@@ -482,7 +482,7 @@ ETH/BRL is high, of 628.12 BRL per 0.044 ETH, which is the receiving amount. Rec
 This transaction can be executed as follows, as to update one's `NDAX` (and `PHAN`) balance(s):
 
 ```julia
-julia> x = 𝒐𝒑Recv(SUB(:ETH, 0.044), SUB(:ETH, 0.001), SUB(:BRL, 628.12))
+julia> x = opRECV(SUB(:ETH, 0.044), SUB(:ETH, 0.001), SUB(:BRL, 628.12))
 Crypto Receiving Operation with
    - Earliest order date ..: 2025-04-29T00:11:14.382
    - Recv amount ..........:         +0.0440000000    ETH
@@ -506,12 +506,12 @@ julia> 𝐍, 𝐏 = [x(NDAX)...]          # This uses approximate (market price)
  nothing
 ```
 """
-struct 𝒐𝒑Recv <: AbstractOP
+struct opRECV <: AbstractOP
     rcv::SUB
     fee::SUB
     apr::SUB
     date::DateTime
-    𝒐𝒑Recv(rcv::SUB, fee::SUB, apr::SUB; date::DateTime = now()) = begin
+    opRECV(rcv::SUB, fee::SUB, apr::SUB; date::DateTime = now()) = begin
         @assert(isCryp(rcv), "Recv operations must, by definition, be receiving crypto currency!")
         @assert(isCryp(fee), "Receiving fee must be in crypto currency!")
         @assert(isFiat(apr), "Approximate statement tracking must be fiat!")
@@ -520,7 +520,7 @@ struct 𝒐𝒑Recv <: AbstractOP
 end
 
 # Functor with fuctionality
-function (x::𝒐𝒑Recv)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple{MTB,Union{MTB,Nothing}}
+function (x::opRECV)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple{MTB,Union{MTB,Nothing}}
     if oBal isa Nothing
         # Don't have to update oBal
         # But no tracking info either (use approximation)
@@ -535,12 +535,12 @@ function (x::𝒐𝒑Recv)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple
 end
 
 # Addition
-+(x::𝒐𝒑Recv, y::𝒐𝒑Recv) = 𝒐𝒑Sell(x.rcv + y.rcv,
++(x::opRECV, y::opRECV) = opSELL(x.rcv + y.rcv,
                                  x.fee + y.fee,
                                  x.apr + y.apr; date = x.date < y.date ? x.date : y.date)
 
 # show/display
-function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Recv)
+function Base.show(io::IO, ::MIME"text/plain", x::opRECV)
     println("Crypto Inbound Transfer Operation with")
     println("   - Earliest order date ..: ", x.date)
     println("   - Recv amount ..........: ", pretty(x.rcv))
@@ -549,25 +549,25 @@ function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Recv)
 end
 
 # export
-export 𝒐𝒑Recv
+export opRECV
 
 
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
-#                                           𝒐𝒑Xch object                                           #
+#                                           opEXCH object                                          #
 #⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅#
 
 """
-`struct 𝒐𝒑Xch <: AbstractOP`\n
+`struct opEXCH <: AbstractOP`\n
 Exchange operation object, that can be used as a functor for crypto-crypto swaps, with fees in
 either crypto currency.
 """
-struct 𝒐𝒑Xch <: AbstractOP
+struct opEXCH <: AbstractOP
     pay::SUB
     rec::SUB
     fee::SUB
     eef::SUB
     date::DateTime
-    𝒐𝒑Xch(pay::SUB, rec::SUB, fee::SUB, eef::SUB; date::DateTime = now()) = begin
+    opEXCH(pay::SUB, rec::SUB, fee::SUB, eef::SUB; date::DateTime = now()) = begin
         @assert(isCryp(pay), "Xch operations must, by definition, be a crypto swap!")
         @assert(isCryp(rec), "Xch operations must, by definition, be a crypto swap!")
         @assert(rec.cur == fee.cur, "Receiving and primary fee must be in the same currency!")
@@ -577,20 +577,20 @@ struct 𝒐𝒑Xch <: AbstractOP
 end
 
 # Functor with fuctionality
-function (x::𝒐𝒑Xch)(sBal::MTB)::MTB
+function (x::opEXCH)(sBal::MTB)::MTB
     dwn, pmt = sBal - (x.pay + x.eef)   # dwm, pmt: tracked (balance, pay) after payment & fee
     cre = STB(x.rec - x.fee, pmt.fiat)  # Tracked swap/exchange credit
     return dwn + cre                    # Tracked balance after the exchange
 end
 
 # Addition
-+(x::𝒐𝒑Xch, y::𝒐𝒑Xch) = 𝒐𝒑Xch(x.pay + y.pay,
++(x::opEXCH, y::opEXCH) = opEXCH(x.pay + y.pay,
                               x.rec + y.rec,
                               x.fee + y.fee,
                               x.eef + y.eef; date = x.date < y.date ? x.date : y.date)
 
 # show/display
-function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Xch)
+function Base.show(io::IO, ::MIME"text/plain", x::opEXCH)
     println("Crypto Exchange Operation with")
     println("   - Earliest order date ..: ", x.date)
     println("   - Payment amount .......: ", pretty(x.pay))
@@ -600,6 +600,6 @@ function Base.show(io::IO, ::MIME"text/plain", x::𝒐𝒑Xch)
 end
 
 # export
-export 𝒐𝒑Xch
+export opEXCH
 
 

@@ -228,7 +228,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
         𝑝 = ST[𝑖]
         @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent deposit amount currency!")
         amt = SUB(𝑝.COIN, 𝑝.AMNT[2])
-        append!(TR, [𝒐𝒑Dep(amt; date = 𝑝.DATE)])
+        append!(TR, [opDEPO(amt; date = 𝑝.DATE)])
         return 1 # Dep runs one at a time
     end
     # function Wit
@@ -236,13 +236,13 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
         𝑝 = ST[𝑖]
         @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent deposit amount currency!")
         amt = SUB(𝑝.COIN, 𝑝.AMNT[2])
-        append!(TR, [𝒐𝒑Draw(amt; date = 𝑝.DATE)])
+        append!(TR, [opDRAW(amt; date = 𝑝.DATE)])
         return 1 # Wit runs one at a time
     end
     # function Snd
     function Snd()
         ZER = SUB(ST[𝑖].COIN, 0)
-        oper = 𝒐𝒑Send(ZER, ZER)
+        oper = opSEND(ZER, ZER)
         for i in 0:1
             𝑝 = ST[𝑥(𝑖, i)]
             @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent deposit amount currency!")
@@ -252,7 +252,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
             elseif 𝑝.TYPE[1] == "Fee"
                 fee = SUB(𝑝.COIN, 𝑝.AMNT[2])
             end
-            oper += 𝒐𝒑Send(snd, fee; date = 𝑝.DATE)
+            oper += opSEND(snd, fee; date = 𝑝.DATE)
         end
         append!(TR, [oper, ])
         return 2 # Snd runs two at a time
@@ -264,14 +264,14 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
         rec = SUB(𝑝.COIN, 𝑝.AMNT[2])
         fee = SUB(𝑝.COIN, 0)
         apr = SUB(𝑝.AMNT[4][2], 𝑝.AMNT[4][1])
-        append!(TR, [𝒐𝒑Recv(rec, fee, apr; date = 𝑝.DATE)])
+        append!(TR, [opRECV(rec, fee, apr; date = 𝑝.DATE)])
         return 1 # Recv runs one at a time
     end
     # function Buy
     function Buy(startType::NTuple{2,AbstractString})
         𝑐, 𝑓 = [Symbol(j) for j in split(startType[2], "/")]    # crypto and fiat
         i, 𝑝 = 0, ST[𝑖]
-        oper = 𝒐𝒑Buy(SUB(𝑓, 0), SUB(𝑐, 0), SUB(𝑐, 0), SUB(𝑓, 0))
+        oper = opPURC(SUB(𝑓, 0), SUB(𝑐, 0), SUB(𝑐, 0), SUB(𝑓, 0))
         while 𝑝.TYPE in [startType, ("Fee", "transaction")]
             @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent purchase amount currency!")
             pay, rec, fee, eef = SUB(𝑓, 0), SUB(𝑐, 0), SUB(𝑐, 0), SUB(𝑓, 0)
@@ -288,7 +288,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
                     fee = SUB(𝑝.COIN, 𝑝.AMNT[2])
                 end
             end
-            oper += 𝒐𝒑Buy(pay, rec, fee, eef; date = 𝑝.DATE)
+            oper += opPURC(pay, rec, fee, eef; date = 𝑝.DATE)
             i += 1
             if isBound(𝑥(𝑖, i))
                 𝑝 = ST[𝑥(𝑖, i)]
@@ -303,7 +303,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
     function Seℓ(startType::NTuple{2,AbstractString})
         𝑐, 𝑓 = [Symbol(j) for j in split(startType[2], "/")]    # crypto and fiat
         i, 𝑝 = 0, ST[𝑖]
-        oper = 𝒐𝒑Sell(SUB(𝑐, 0), SUB(𝑓, 0), SUB(𝑓, 0))
+        oper = opSELL(SUB(𝑐, 0), SUB(𝑓, 0), SUB(𝑓, 0))
         while 𝑝.TYPE in [startType, ("Fee", "transaction")]
             @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent purchase amount currency!")
             pay, rec, fee = SUB(𝑐, 0), SUB(𝑓, 0), SUB(𝑓, 0)
@@ -316,7 +316,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
             elseif 𝑝.COIN == 𝑐
                 pay = SUB(𝑝.COIN, 𝑝.AMNT[2])
             end
-            oper += 𝒐𝒑Sell(pay, rec, fee; date = 𝑝.DATE)
+            oper += opSELL(pay, rec, fee; date = 𝑝.DATE)
             i += 1
             if isBound(𝑥(𝑖, i))
                 𝑝 = ST[𝑥(𝑖, i)]
@@ -332,7 +332,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
         𝑎, 𝑏 = [Symbol(j) for j in split(startType[2], "/")]    # 𝑎 and 𝑏 cryptos
         i, 𝑝 = 0, ST[𝑖]
         𝐴, 𝐵 = startType[1] == "Sell" ? (SUB(𝑎, 0), SUB(𝑏, 0)) : (SUB(𝑏, 0), SUB(𝑎, 0))
-        oper = 𝒐𝒑Xch(𝐴, 𝐵, 𝐵, 𝐴)                                # Pure coincidence ;-)
+        oper = opEXCH(𝐴, 𝐵, 𝐵, 𝐴)                                # Pure coincidence ;-)
         while 𝑝.TYPE in [startType, ("Fee", "transaction")]
             @assert(𝑝.COIN == 𝑝.AMNT[3], "Inconsistent purchase amount currency!")
             pay, rec, fee, eef = 𝐴, 𝐵, 𝐵, 𝐴
@@ -361,7 +361,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
                     end
                 end
             end
-            oper += 𝒐𝒑Xch(pay, rec, fee, eef; date = 𝑝.DATE)
+            oper += opEXCH(pay, rec, fee, eef; date = 𝑝.DATE)
             i += 1
             if isBound(𝑥(𝑖, i))
                 𝑝 = ST[𝑥(𝑖, i)]
@@ -387,7 +387,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
                 pay = SUB(𝑡.COIN, 𝑡.AMNT[2])
             end
         end
-        oper = 𝒐𝒑Sell(pay, rec, fee; date = tr[1].DATE)
+        oper = opSELL(pay, rec, fee; date = tr[1].DATE)
         append!(TR, [oper])
         return 3
     end
@@ -396,7 +396,7 @@ function accumGroupTrans!(TR::Vector{AbstractOP},
     𝑥 = fwd ? (+) : (-)
     𝑖 = fwd ? 1 : ℓ
     isBound(ind) = 1 <= ind <= ℓ
-    append!(TR, [𝒐𝒑Ini(PREV, date = 𝑥(ST[𝑖].DATE, -Day(1)))])
+    append!(TR, [opINIT(PREV, date = 𝑥(ST[𝑖].DATE, -Day(1)))])
     while isBound(𝑖)
         if ST[𝑖].TYPE[1] in ["Deposit", "Redeemed"]
             𝑖 = 𝑥(𝑖, Dep())
@@ -444,23 +444,23 @@ function run!(TR::Vector{AbstractOP},
     count = 0
     for x in TR
         count += 1
-        if x isa 𝒐𝒑Ini
+        if x isa opINIT
             nBal = x()
-        elseif x isa 𝒐𝒑Dep
+        elseif x isa opDEPO
             nBal, bBal = x(nBal, bBal)
-        elseif x isa 𝒐𝒑Draw
+        elseif x isa opDRAW
             nBal, bBal = x(nBal, bBal)
-        elseif x isa 𝒐𝒑Buy
+        elseif x isa opPURC
             nBal = x(nBal)
-        elseif x isa 𝒐𝒑Sell
+        elseif x isa opSELL
             nBal, L, P = x(nBal)
             append!(LOSS, [L,])
             append!(PROF, [P,])
-        elseif x isa 𝒐𝒑Send
+        elseif x isa opSEND
             nBal, oBal = x(nBal, oBal)
-        elseif x isa 𝒐𝒑Recv
+        elseif x isa opRECV
             nBal, oBal = x(nBal, oBal)
-        elseif x isa 𝒐𝒑Xch
+        elseif x isa opEXCH
             nBal = x(nBal)
         end
     end
