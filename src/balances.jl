@@ -277,11 +277,16 @@ its purchase price in fiat currency—the data in `xfer`.
 """
 -(x::STB, y::SUB, ref::Union{STB,Nothing} = nothing)::Tuple{STB,STB} = begin
     @assert(symb(x)[1] == symb(y), "Can't sub different tracking pair balances!")
-    if (x.cryp == zero(x.cryp)) && (ref isa STB)
-        @assert(symb(x) == symb(ref), "Can't reference sub different tracking pair balances!")
-        x_r = bare(ref.fiat) / bare(ref.cryp)
-        Y   = STB(y, SUB(symb(ref.fiat), x_r * bare(y)))
-        return -Y, Y
+    if x.cryp == zero(x.cryp)
+        if ref isa STB
+            @assert(symb(x) == symb(ref), "Can't reference sub different tracking pair balances!")
+            x_r = bare(ref.fiat) / bare(ref.cryp)
+            Y   = STB(y, SUB(symb(ref.fiat), x_r * bare(y)))
+            return -Y, Y
+        else
+            Y   = STB(y, SUB(symb(x.fiat), bare(y)))
+            return -Y, Y
+        end
     else
         dif = x.cryp - y                    # the difference
         r_d = bare(dif) / bare(x.cryp)      # the 0 <= difference ratio <= 1

@@ -528,7 +528,9 @@ function (x::opRECV)(sBal::MTB, oBal::Union{MTB,Nothing} = nothing)::Tuple{MTB,U
         return sBal, nothing
     else
         𝑎, 𝑏 = oBal - STB(x.rcv, x.apr) # This makes 𝑏 as the transfered amount (with tracking)
-        𝑎    = (𝑎 - x.fee)[1]           # This makes 𝑎 as the tracked balance for oBal
+        if bare(x.fee) != 0
+            𝑎    = (𝑎 - x.fee)[1]       # This makes 𝑎 as the tracked balance for oBal
+        end
         sBal += 𝑏
         return sBal, 𝑎
     end
